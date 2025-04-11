@@ -1,83 +1,134 @@
-document.getElementById('docx-file').addEventListener('change', handleFileUpload);
-document.getElementById('highlight-btn').addEventListener('click', highlightKeywords);
+// v1.1.1-safe — PDF works, Word export temporarily disabled due to docx.js MIME issue
 
-let keywords = [];
+document.getElementById("reset").addEventListener("click", () => {
+  document.getElementById("upload").value = "";
+  document.getElementById("output").innerHTML = "";
+});
 
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (file && file.name.endsWith('.docx')) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const arrayBuffer = e.target.result;
-            window.docxArrayBuffer = arrayBuffer;
-        };
-        reader.readAsArrayBuffer(file);
-    }
-}
+let lastParsedData = []; // Cache parsed results for export
 
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+document.getElementById("generate").addEventListener("click", () => {
+  const output = document.getElementById("output");
+  output.innerHTML = "";
+  lastParsedData = [];
 
-function buildKeywordRegex(keyword) {
-    // Treat phrases normally, words get \b...\b
-    const trimmed = keyword.trim();
-    if (/\s/.test(trimmed)) {
-        return new RegExp(escapeRegExp(trimmed), 'gi');
-    } else {
-        return new RegExp(`\\b${escapeRegExp(trimmed)}\\b`, 'gi');
-    }
-}
+  const keywordList = document.getElementById("keywords").value.split(/\r?\n/).map(k => k.trim()).filter(k => k);
+  const files = document.getElementById("upload").files;
 
-async function highlightKeywords() {
-    const keywordInput = document.getElementById('keywords').value;
-    keywords = keywordInput.split('\n').map(k => k.trim()).filter(k => k);
+  if (!files.length) {
+    alert("Please upload at least one .docx file.");
+    return;
+  }
 
-    if (!window.docxArrayBuffer || keywords.length === 0) {
-        alert("Please upload a .docx file and enter at least one keyword.");
-        return;
-    }
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+      const arrayBuffer = event.target.result;
 
-    const zip = new PizZip(window.docxArrayBuffer);
-    const doc = new window.docxjs.HtmlDocument(zip);
-    const htmlString = await doc.convert();
+      mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+        .then(result => {
+          const text = result.value;
+          const sentences = text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
 
-    const container = document.getElementById('output');
-    container.innerHTML = htmlString;
+          const summary = {};
+          const results = [];
 
-    let matchCount = 0;
+          sentences.forEach((sentence, idx) => {
+            keywordList.forEach(keyword => {
+              const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = keyword.includes(" ")
+                ? new RegExp("(" + escaped + ")", "gi")
+                : new RegExp("\\b(" + escaped + ")\\b", "gi");
 
-    keywords.forEach(keyword => {
-        const regex = buildKeywordRegex(keyword);
-        highlightMatches(container, regex, keyword, () => matchCount++);
-    });
+              if (regex.test(sentence)) {
+                summary[keyword] = summary[keyword] || [];
+                summary[keyword].push(idx + 1);
+                const highlighted = sentence.replace(regex, "<span class='highlight'>$1</span>");
+                results.push({ page: idx + 1, raw: sentence, html: highlighted, keyword });
+              }
+            });
+          });
 
-    document.getElementById('match-count').textContent = `Matches found: ${matchCount}`;
-}
+          lastParsedData.push({ filename: file.name, summary, results });
 
-function highlightMatches(container, regex, keyword, onMatch) {
-    const treeWalker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        {
-            acceptNode: function (node) {
-                return regex.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-            }
-        }
-    );
+          const section = document.createElement("div");
+          section.classList.add("file-section");
+          section.innerHTML = `<h2>Results for: ${file.name}</h2>`;
 
-    let nodes = [];
-    while (treeWalker.nextNode()) {
-        nodes.push(treeWalker.currentNode);
-    }
+          let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
+          Object.entries(summary).forEach(([keyword, pages]) => {
+            const pageStr = [...new Set(pages)].join(", ");
+            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
+          });
+          summaryHTML += "</ul></div>";
 
-    nodes.forEach(node => {
-        const span = document.createElement('span');
-        const replacedHTML = node.nodeValue.replace(regex, match => {
-            onMatch();
-            return `<mark><strong style="color:red;">${match}</strong></mark>`;
+          let resultsHTML = "<div class='results'><h3>Matched Sentences</h3>";
+          results.forEach(entry => {
+            resultsHTML += `<div class="result-sentence">Sentence ${entry.page}: “${entry.html}”</div>`;
+          });
+          resultsHTML += "</div>";
+
+          section.innerHTML += summaryHTML + resultsHTML;
+          output.appendChild(section);
         });
-        span.innerHTML = replacedHTML;
-        node.parentNode.replaceChild(span, node);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+});
+
+document.getElementById("download-word").addEventListener("click", () => {
+  if (!lastParsedData.length) {
+    alert("Generate summary first.");
+    return;
+  }
+
+  const doc = new docx.Document();
+
+  lastParsedData.forEach(file => {
+    doc.addSection({
+      children: [
+        new docx.Paragraph({ text: `=== File: ${file.filename} ===`, heading: docx.HeadingLevel.HEADING_2 }),
+        new docx.Paragraph({ text: "Summary:", heading: docx.HeadingLevel.HEADING_3 }),
+        ...Object.entries(file.summary).map(([k, p]) =>
+          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Pages ${[...new Set(p)].join(", ")})`)
+        ),
+        new docx.Paragraph({ text: "Matched Sentences:", heading: docx.HeadingLevel.HEADING_3 }),
+        ...file.results.map(entry => {
+          const p = new docx.Paragraph({ children: [] });
+          p.addRun(new docx.TextRun(`Page ${entry.page}: “`));
+          const split = entry.raw.split(new RegExp(`(${entry.keyword})`, "i"));
+          split.forEach(part => {
+            if (part.toLowerCase() === entry.keyword.toLowerCase()) {
+              p.addRun(new docx.TextRun(part).bold().color("FF0000").highlight("yellow"));
+            } else {
+              p.addRun(new docx.TextRun(part));
+            }
+          });
+          p.addRun(new docx.TextRun("”"));
+          return p;
+        })
+      ]
     });
-}
+  });
+
+  docx.Packer.toBlob(doc).then(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Keyword_Summary.docx";
+    a.click();
+  });
+});
+
+document.getElementById("download-pdf").addEventListener("click", () => {
+  const element = document.getElementById("output");
+  if (!element.innerHTML.trim()) {
+    alert("Generate summary first.");
+    return;
+  }
+
+  html2pdf().set({
+  margin: [0.5, 0.5, 0.5, 0.5],
+  filename: "Keyword_Summary.pdf",
+  html2canvas: { scale: 2 },
+  jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, filename: "Keyword_Summary.pdf", html2canvas: { scale: 2 } }).from(element).save();
+});
