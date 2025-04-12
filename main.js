@@ -58,7 +58,7 @@ document.getElementById("generate").addEventListener("click", () => {
           let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
           Object.entries(summary).forEach(([keyword, pages]) => {
             const pageStr = [...new Set(pages)].join(", ");
-            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
+            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
           });
           summaryHTML += "</ul></div>";
 
@@ -90,7 +90,7 @@ document.getElementById("download-word").addEventListener("click", () => {
         new docx.Paragraph({ text: `=== File: ${file.filename} ===`, heading: docx.HeadingLevel.HEADING_2 }),
         new docx.Paragraph({ text: "Summary:", heading: docx.HeadingLevel.HEADING_3 }),
         ...Object.entries(file.summary).map(([k, p]) =>
-          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Pages ${[...new Set(p)].join(", ")})`)
+          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Sentences ${[...new Set(p)].join(", ")})`)
         ),
         new docx.Paragraph({ text: "Matched Sentences:", heading: docx.HeadingLevel.HEADING_3 }),
         ...file.results.map(entry => {
