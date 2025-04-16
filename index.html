@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,6 +73,7 @@
   <div style="flex: 2; min-width: 300px;">
     <h2>Instructions:</h2>
     <ul style="margin-top: 0;">
+      <li>Add to/edit the keywords list as needed. It currently pre-loads a master list.</li>
       <li>Upload one or more Word <code>.docx</code> files for checking. (This does not support older <code>.doc</code> files.)</li>
       <li>Click “Generate Summary” to show the found keywords in the document(s).</li>
       <li>Click either “Download Word Summary" (currently disabled) or “Download PDF Summary” to save the results.</li>
@@ -79,17 +81,17 @@
     </ul>
   </div>
 
-  <!-- RIGHT: Keyword JSON reference -->
+  <!-- RIGHT: Keywords -->
   <div style="flex: 1; min-width: 240px;">
-    <label><strong>Keyword List:</strong></label><br>
-    <p style="margin-top: 0.5em;">Loaded from <code>keywords_with_suggestions.json</code></p>
+    <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label><br>
+    <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..." style="width: 100%; margin-top: 0.5em;"></textarea>
   </div>
 </div>
 
 <!-- FULL-WIDTH: Upload & Buttons -->
 <div style="margin-bottom: 2em;">
   <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
-  <input type="file" id="upload" accept=".txt,.docx" multiple style="margin-top: 0.5em;" />
+  <input type="file" id="upload" accept=".docx" multiple style="margin-top: 0.5em;" />
   <div style="margin-top: 1em;">
     <button id="generate">Generate Summary</button>
     <button id="download-word">Download Word Summary</button>
@@ -101,8 +103,16 @@
   <div id="output"></div>
 
   <script src="main.js"></script>
-  <script src="docx.umd.js"></script>
+<script src="docx.umd.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    fetch('keywords.txt')
+      .then(response => response.text())
+      .then(text => {
+        document.getElementById('keywords').value = text.trim();
+      });
+  </script>
 </body>
 </html>

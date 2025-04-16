@@ -1,25 +1,18 @@
-// v1.1.1-safe — now with keyword suggestions from JSON
-
-let keywordMap = {};
-let lastParsedData = [];
+// v1.1.1-safe — PDF works, Word export temporarily disabled due to docx.js MIME issue
 
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
-  lastParsedData = [];
 });
 
-document.getElementById("generate").addEventListener("click", async () => {
+let lastParsedData = []; // Cache parsed results for export
+
+document.getElementById("generate").addEventListener("click", () => {
   const output = document.getElementById("output");
   output.innerHTML = "";
   lastParsedData = [];
 
-  const response = await fetch('data/keywords_with_suggestions.json');
-  const keywordData = await response.json();
-  keywordMap = {};
-  keywordData.forEach(item => keywordMap[item.term.toLowerCase()] = item.suggestions);
-
-  const keywords = Object.keys(keywordMap);
+  const keywordList = document.getElementById("keywords").value.split(/\r?\n/).map(k => k.trim()).filter(k => k);
   const files = document.getElementById("upload").files;
 
   if (!files.length) {
@@ -29,7 +22,7 @@ document.getElementById("generate").addEventListener("click", async () => {
 
   Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
       const arrayBuffer = event.target.result;
 
       mammoth.extractRawText({ arrayBuffer: arrayBuffer })
@@ -41,7 +34,7 @@ document.getElementById("generate").addEventListener("click", async () => {
           const results = [];
 
           sentences.forEach((sentence, idx) => {
-            keywords.forEach(keyword => {
+            keywordList.forEach(keyword => {
               const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               const regex = keyword.includes(" ")
                 ? new RegExp("(" + escaped + ")", "gi")
@@ -51,13 +44,7 @@ document.getElementById("generate").addEventListener("click", async () => {
                 summary[keyword] = summary[keyword] || [];
                 summary[keyword].push(idx + 1);
                 const highlighted = sentence.replace(regex, "<span class='highlight'>$1</span>");
-                results.push({
-                  page: idx + 1,
-                  raw: sentence,
-                  html: highlighted,
-                  keyword: keyword,
-                  suggestions: keywordMap[keyword]
-                });
+                results.push({ page: idx + 1, raw: sentence, html: highlighted, keyword });
               }
             });
           });
@@ -71,14 +58,13 @@ document.getElementById("generate").addEventListener("click", async () => {
           let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
           Object.entries(summary).forEach(([keyword, pages]) => {
             const pageStr = [...new Set(pages)].join(", ");
-            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
+            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
           });
           summaryHTML += "</ul></div>";
 
           let resultsHTML = "<div class='results'><h3>Matched Sentences</h3>";
           results.forEach(entry => {
-            resultsHTML += `<div class="result-sentence">Sentence ${entry.page}: “${entry.html}”<br>
-              <strong>Suggested alternatives:</strong> ${entry.suggestions.join(", ")}</div>`;
+            resultsHTML += `<div class="result-sentence">Sentence ${entry.page}: “${entry.html}”</div>`;
           });
           resultsHTML += "</div>";
 
@@ -104,7 +90,7 @@ document.getElementById("download-word").addEventListener("click", () => {
         new docx.Paragraph({ text: `=== File: ${file.filename} ===`, heading: docx.HeadingLevel.HEADING_2 }),
         new docx.Paragraph({ text: "Summary:", heading: docx.HeadingLevel.HEADING_3 }),
         ...Object.entries(file.summary).map(([k, p]) =>
-          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Sentences ${[...new Set(p)].join(", ")})`)
+          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Pages ${[...new Set(p)].join(", ")})`)
         ),
         new docx.Paragraph({ text: "Matched Sentences:", heading: docx.HeadingLevel.HEADING_3 }),
         ...file.results.map(entry => {
@@ -119,7 +105,6 @@ document.getElementById("download-word").addEventListener("click", () => {
             }
           });
           p.addRun(new docx.TextRun("”"));
-          p.addRun(new docx.TextRun(` Suggested alternatives: ${entry.suggestions.join(", ")}`).break());
           return p;
         })
       ]
@@ -142,9 +127,8 @@ document.getElementById("download-pdf").addEventListener("click", () => {
   }
 
   html2pdf().set({
-    margin: [0.5, 0.5, 0.5, 0.5],
-    filename: "Keyword_Summary.pdf",
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
-  }).from(element).save();
+  margin: [0.5, 0.5, 0.5, 0.5],
+  filename: "Keyword_Summary.pdf",
+  html2canvas: { scale: 2 },
+  jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, filename: "Keyword_Summary.pdf", html2canvas: { scale: 2 } }).from(element).save();
 });
