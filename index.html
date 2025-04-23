@@ -121,20 +121,19 @@
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.5</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.6</div>
 
   <div class="flex-row">
     <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
     <div style="flex: 2;">
       <img src="logo.png" alt="Highlight Tool Logo" style="max-width: 100%; height: auto;">
       <h2>Instructions:</h2>
-      <ol>
+      <ul>
         <li>Edit the keyword list or add new ones (one per line).</li>
-        <li>Upload one or more Word <code>.docx</code> files. Old .doc files will not work.</li>
-        <li>Click “Generate Summary” to process the files.</li>
-        <li>Select your chart type option, keyword filters, and sort options.
-        <li>Click “Print or Save Summary” to export the results (Print to PDF).</li>
-      </ol>
+        <li>Upload one or more Word <code>.docx</code> files.</li>
+        <li>Click “Generate Summary” to process them.</li>
+        <li>Click “Print or Save Summary” to export the results.</li>
+      </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
 
@@ -183,8 +182,8 @@
   <!-- Scripts -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-  <script src="datalabels.js"></script>
   <script>
     fetch('keywords.txt')
       .then(response => response.text())
@@ -192,24 +191,9 @@
         document.getElementById('keywords').value = text.trim();
       });
 
-    // Theme toggle override (dark/light)
-    function applyTheme(mode) {
-      document.body.classList.remove("dark-mode", "light-mode");
-      document.body.classList.add(`${mode}-mode`);
-    }
-
-    function toggleTheme() {
-      const current = localStorage.getItem("theme") || "light";
-      const newMode = current === "dark" ? "light" : "dark";
-      localStorage.setItem("theme", newMode);
-      applyTheme(newMode);
-    }
-
-    document.getElementById("toggle-theme").addEventListener("click", toggleTheme);
-
     window.addEventListener("DOMContentLoaded", () => {
       const saved = localStorage.getItem("theme") || "light";
-      applyTheme(saved);
+      document.body.classList.add(`${saved}-mode`);
     });
   </script>
 </body>
