@@ -5,7 +5,7 @@ document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
   const ctx = document.getElementById("chart").getContext("2d");
-  ctx.clearRect(0, 0, 600, 400);
+  ctx.clearRect(0, 0, 400, 400);
   if (chartInstance) chartInstance.destroy();
   chartInstance = null;
   lastParsedData = [];
@@ -29,54 +29,53 @@ document.getElementById("generate").addEventListener("click", () => {
     reader.onload = async function(event) {
       const arrayBuffer = event.target.result;
 
-      mammoth.extractRawText({ arrayBuffer: arrayBuffer })
-        .then(result => {
-          const text = result.value;
-          const sentences = text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+      mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(result => {
+        const text = result.value;
+        const sentences = text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
 
-          const summary = {};
-          const results = [];
+        const summary = {};
+        const results = [];
 
-          sentences.forEach((sentence, idx) => {
-            keywordList.forEach(keyword => {
-              const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const regex = keyword.includes(" ")
-                ? new RegExp("(" + escaped + ")", "gi")
-                : new RegExp("\\b(" + escaped + ")\\b", "gi");
+        sentences.forEach((sentence, idx) => {
+          keywordList.forEach(keyword => {
+            const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = keyword.includes(" ")
+              ? new RegExp("(" + escaped + ")", "gi")
+              : new RegExp("\\b(" + escaped + ")\\b", "gi");
 
-              if (regex.test(sentence)) {
-                summary[keyword] = summary[keyword] || [];
-                summary[keyword].push(idx + 1);
-                const highlighted = sentence.replace(regex, "<span class='highlight'>$1</span>");
-                results.push({ page: idx + 1, raw: sentence, html: highlighted, keyword });
-              }
-            });
+            if (regex.test(sentence)) {
+              summary[keyword] = summary[keyword] || [];
+              summary[keyword].push(idx + 1);
+              const highlighted = sentence.replace(regex, "<span class='highlight'>$1</span>");
+              results.push({ page: idx + 1, raw: sentence, html: highlighted, keyword });
+            }
           });
-
-          lastParsedData.push({ filename: file.name, summary, results });
-
-          const section = document.createElement("div");
-          section.classList.add("file-section");
-          section.innerHTML = `<h2>Results for: ${file.name}</h2>`;
-
-          let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
-          Object.entries(summary).forEach(([keyword, pages]) => {
-            const pageStr = [...new Set(pages)].join(", ");
-            summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
-          });
-          summaryHTML += "</ul></div>";
-
-          let resultsHTML = "<div class='results'><h3>Matched Sentences</h3>";
-          results.forEach(entry => {
-            resultsHTML += `<div class="result-sentence">Sentence ${entry.page}: “${entry.html}”</div>`;
-          });
-          resultsHTML += "</div>";
-
-          section.innerHTML += summaryHTML + resultsHTML;
-          output.appendChild(section);
-
-          renderChart("bar");
         });
+
+        lastParsedData.push({ filename: file.name, summary, results });
+
+        const section = document.createElement("div");
+        section.classList.add("file-section");
+        section.innerHTML = `<h2>Results for: ${file.name}</h2>`;
+
+        let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
+        Object.entries(summary).forEach(([keyword, pages]) => {
+          const pageStr = [...new Set(pages)].join(", ");
+          summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
+        });
+        summaryHTML += "</ul></div>";
+
+        let resultsHTML = "<div class='results'><h3>Matched Sentences</h3>";
+        results.forEach(entry => {
+          resultsHTML += `<div class="result-sentence">Sentence ${entry.page}: “${entry.html}”</div>`;
+        });
+        resultsHTML += "</div>";
+
+        section.innerHTML += summaryHTML + resultsHTML;
+        output.appendChild(section);
+
+        renderChart(document.getElementById("chartType").value);
+      });
     };
     reader.readAsArrayBuffer(file);
   });
@@ -97,6 +96,10 @@ document.getElementById("download-pdf").addEventListener("click", () => {
   }).from(element).save();
 });
 
+document.getElementById("chartType").addEventListener("change", (e) => {
+  renderChart(e.target.value);
+});
+
 function renderChart(type) {
   if (!lastParsedData.length) return;
 
@@ -112,9 +115,11 @@ function renderChart(type) {
 
   const keywords = Object.keys(keywordCounts);
   const counts = Object.values(keywordCounts);
+  const actualType = type === "bar" && keywords.length > 6 ? "bar" : type;
+  const indexAxis = actualType === "bar" && keywords.length > 6 ? 'y' : 'x';
 
   chartInstance = new Chart(ctx, {
-    type: (type === "bar" && keywords.length > 6) ? "bar" : type,
+    type: actualType,
     data: {
       labels: keywords,
       datasets: [{
@@ -124,15 +129,16 @@ function renderChart(type) {
       }]
     },
     options: {
-      indexAxis: (type === "bar" && keywords.length > 6) ? 'y' : 'x',
+      indexAxis,
+      responsive: true,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => `${ctx.parsed.y ?? ctx.parsed} matches` } }
-      },
-      responsive: true
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y ?? ctx.parsed} matches`
+          }
+        }
+      }
     }
   });
 }
-
-document.getElementById("chart-bar").addEventListener("click", () => renderChart("bar"));
-document.getElementById("chart-pie").addEventListener("click", () => renderChart("pie"));
