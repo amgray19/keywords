@@ -124,7 +124,7 @@ function renderOutput() {
       Object.entries(file.summary).forEach(([keyword, pages]) => {
         if (!filter || keyword === filter) {
           const pageStr = [...new Set(pages)].join(", ");
-          summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
+          summaryHTML += `<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
         }
       });
       summaryHTML += "</ul></div>";
@@ -132,7 +132,7 @@ function renderOutput() {
       let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
       file.results.forEach(entry => {
         if (!filter || entry.keyword === filter) {
-          resultsHTML += `<li class="result-sentence">Sentence ${entry.page}: “${entry.html}”</li>`;
+          resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
         }
       });
       resultsHTML += "</ul></div>";
