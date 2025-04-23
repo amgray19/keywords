@@ -79,13 +79,13 @@
         <li>Edit the keyword list or add new ones (one per line).</li>
         <li>Upload one or more Word <code>.docx</code> files.</li>
         <li>Click “Generate Summary” to process them.</li>
-        <li>Click “Download PDF Summary” to save the results.</li>
+        <li>Click “Print or Save Summary” to save the results.</li>
       </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
       <div class="controls">
         <button id="generate">Generate Summary</button>
-        <button id="download-pdf">Download PDF Summary</button>
+        <button id="download-pdf">Print or Save Summary</button>
         <button id="reset">Reset</button>
 
         <div class="dropdown-row">
@@ -114,13 +114,10 @@
 
   <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
-  <div id="printable" style="position: absolute; left: -9999px; width: 800px; background: white; padding: 1em;"></div>
 
-  <!-- Scripts -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     fetch('keywords.txt')
       .then(response => response.text())
