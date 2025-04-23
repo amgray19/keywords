@@ -4,6 +4,9 @@ let lastParsedData = [];
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
+  const chart = document.getElementById("chart");
+  chart.style.display = "none";
+  chart.style.border = "none";
   if (chartInstance) chartInstance.destroy();
   chartInstance = null;
   lastParsedData = [];
@@ -66,11 +69,18 @@ document.getElementById("generate").addEventListener("click", () => {
 });
 
 document.getElementById("download-pdf").addEventListener("click", () => {
-  const exportContainer = document.createElement("div");
-  exportContainer.style.padding = "1em";
-  exportContainer.innerHTML = "<h2>Keyword Summary Report</h2>";
+  const existingExport = document.getElementById("pdf-temp-export");
+  if (existingExport) existingExport.remove();
 
-  // Convert chart to image
+  const exportContainer = document.createElement("div");
+  exportContainer.id = "pdf-temp-export";
+  exportContainer.style.position = "absolute";
+  exportContainer.style.left = "-9999px";
+  exportContainer.style.width = "800px";
+  exportContainer.style.padding = "1em";
+  exportContainer.style.background = "#fff";
+  exportContainer.innerHTML = "<h2 style='margin-top: 0;'>Keyword Summary Report</h2>";
+
   const chartCanvas = document.getElementById("chart");
   const chartImg = document.createElement("img");
   chartImg.src = chartCanvas.toDataURL("image/png");
@@ -78,22 +88,23 @@ document.getElementById("download-pdf").addEventListener("click", () => {
   chartImg.style.marginBottom = "1em";
   exportContainer.appendChild(chartImg);
 
-  // Clone the visible output content
   const outputClone = document.getElementById("output").cloneNode(true);
   exportContainer.appendChild(outputClone);
+  document.body.appendChild(exportContainer);
 
   html2pdf().set({
-    margin: [0.5, 0.5, 0.5, 0.5],
+    margin: 0.5,
     filename: "Keyword_Summary.pdf",
-    html2canvas: { scale: 2 },
+    html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
-  }).from(exportContainer).save();
+  }).from(exportContainer).save().then(() => {
+    exportContainer.remove();
+  });
 });
 
 document.getElementById("chartType").addEventListener("change", e => {
   renderChart(e.target.value);
 });
-
 document.getElementById("filterKeyword").addEventListener("change", renderOutput);
 document.getElementById("viewMode").addEventListener("change", renderOutput);
 
@@ -141,7 +152,6 @@ function renderOutput() {
       output.appendChild(section);
     });
   } else {
-    // Group by keyword
     const keywordMap = {};
     lastParsedData.forEach(file => {
       file.results.forEach(entry => {
@@ -157,11 +167,11 @@ function renderOutput() {
       section.classList.add("file-section");
       section.innerHTML = `<h2>Results for: ${keyword}</h2>`;
 
-      const summaryHTML = `<div class='summary'><h3>Summary</h3><ul><li>${entries.length} match(es) across ${new Set(entries.map(e => e.file)).size} file(s)</li></ul></div>`;
+      const summaryHTML = `<div class='summary'><h3>Summary</h3><ul><li><strong>${keyword}</strong> — ${entries.length} match(es) across ${new Set(entries.map(e => e.file)).size} file(s)</li></ul></div>`;
 
       let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
       entries.forEach(entry => {
-        resultsHTML += `<li class="result-sentence">[${entry.file}] Sentence ${entry.page}: “${entry.html}”</li>`;
+        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> [${entry.file}] “${entry.html}”</li>`;
       });
       resultsHTML += "</ul></div>";
 
@@ -175,6 +185,10 @@ function renderChart(type) {
   if (!lastParsedData.length) return;
 
   const ctx = document.getElementById("chart").getContext("2d");
+  const chartCanvas = document.getElementById("chart");
+  chartCanvas.style.display = "block";
+  chartCanvas.style.border = "1px solid #ccc";
+
   if (chartInstance) chartInstance.destroy();
 
   const keywordCounts = {};
