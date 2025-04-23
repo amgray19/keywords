@@ -56,11 +56,29 @@
 <body>
   <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.4</div>
 
-  <!-- TOP ROW: Logo + Keywords/Chart (flex) -->
+  <!-- FLEX: Logo + Right Column (Keywords + Chart) -->
   <div class="flex-row" style="align-items: flex-start; gap: 2em;">
-    <!-- LEFT: Logo -->
-    <div style="flex: 1;">
+    <!-- LEFT: Logo + Instructions + Upload -->
+    <div style="flex: 2;">
       <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
+
+      <h2>Instructions:</h2>
+      <ul>
+        <li>Edit the keyword list or add new ones (one per line).</li>
+        <li>Upload one or more Word <code>.docx</code> files.</li>
+        <li>Click “Generate Summary” to process them.</li>
+        <li>Click “Download PDF Summary” to save the results.</li>
+        <li>Use the dropdown to change the chart type.</li>
+        <li>Hit Reset to start over.</li>
+      </ul>
+
+      <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
+      <input type="file" id="upload" accept=".docx" multiple />
+      <div style="margin-top: 1em;">
+        <button id="generate">Generate Summary</button>
+        <button id="download-pdf">Download PDF Summary</button>
+        <button id="reset">Reset</button>
+      </div>
     </div>
 
     <!-- RIGHT: Keywords + Chart -->
@@ -78,30 +96,7 @@
     </div>
   </div>
 
-  <!-- NEXT ROW: Instructions + Upload -->
-  <div class="flex-row" style="margin-top: 2em; gap: 2em;">
-    <div style="flex: 2; min-width: 300px;">
-      <h2>Instructions:</h2>
-      <ul>
-        <li>Edit the keyword list or add new ones (one per line).</li>
-        <li>Upload one or more Word <code>.docx</code> files.</li>
-        <li>Click “Generate Summary” to process them.</li>
-        <li>Click “Download PDF Summary” to save the results.</li>
-        <li>Use the dropdown to change the chart type.</li>
-        <li>Hit Reset to start over.</li>
-      </ul>
-
-      <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
-      <input type="file" id="upload" accept=".docx" multiple />
-      <div>
-        <button id="generate">Generate Summary</button>
-        <button id="download-pdf">Download PDF Summary</button>
-        <button id="reset">Reset</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- OUTPUT RESULTS SECTION -->
+  <!-- RESULTS OUTPUT -->
   <div id="output" style="margin-top: 2em;"></div>
 
   <!-- SCRIPTS -->
@@ -117,3 +112,4 @@
       });
   </script>
 </body>
+</html>
