@@ -66,7 +66,7 @@ document.getElementById("generate").addEventListener("click", () => {
 
         lastParsedData.push({ filename: file.name, summary, results });
         updateFilterOptions(Array.from(allKeywordsSet).sort());
-        renderChart(document.getElementById("chartType").value, false);
+        renderChart(document.getElementById("chartType").value);
         renderOutput();
       });
     };
@@ -80,10 +80,16 @@ document.getElementById("toggle-theme").addEventListener("click", () => {
   localStorage.setItem("theme", newMode);
   document.body.classList.remove("dark-mode", "light-mode");
   document.body.classList.add(`${newMode}-mode`);
-  const logo = document.getElementById("logo");
-  if (logo) logo.src = newMode === "dark" ? "logo-dark.png" : "logo-light.png";
+  document.getElementById("logo").src = newMode === "dark" ? "logo-dark.png" : "logo-light.png";
   renderChart(document.getElementById("chartType").value);
 });
+
+document.getElementById("chartType").addEventListener("change", (e) => {
+  renderChart(e.target.value);
+});
+
+document.getElementById("filterKeyword").addEventListener("change", renderOutput);
+document.getElementById("viewMode").addEventListener("change", renderOutput);
 
 function updateFilterOptions(keywordList) {
   const select = document.getElementById("filterKeyword");
@@ -96,14 +102,14 @@ function updateFilterOptions(keywordList) {
   });
 }
 
-function renderChart(type, forceLightMode = false) {
+function renderChart(type) {
   if (!lastParsedData.length) return;
 
   const ctx = document.getElementById("chart").getContext("2d");
   const chartCanvas = document.getElementById("chart");
   chartCanvas.style.display = "block";
   chartCanvas.style.border = "1px solid #ccc";
-  chartCanvas.style.marginBottom = "3em"; // more space under pie chart
+  chartCanvas.style.marginBottom = "3em";
 
   if (chartInstance) chartInstance.destroy();
 
@@ -118,6 +124,7 @@ function renderChart(type, forceLightMode = false) {
   const keywords = sortedEntries.map(([k]) => k);
   const counts = sortedEntries.map(([, v]) => v);
   const total = counts.reduce((a, b) => a + b, 0);
+  const isDark = document.body.classList.contains("dark-mode");
   const actualType = type === "bar" && keywords.length > 6 ? "bar" : type;
   const indexAxis = actualType === "bar" && keywords.length > 6 ? 'y' : 'x';
 
@@ -125,8 +132,9 @@ function renderChart(type, forceLightMode = false) {
     const hue = (360 * i / total);
     return `hsl(${hue}, 80%, 75%)`;
   };
+
   const backgroundColor = keywords.map((_, i) => pastelColor(i, keywords.length));
-  const borderColor = document.body.classList.contains("dark-mode") && actualType === "bar" ? "#fff" : "#000";
+  const borderColor = actualType === "pie" || actualType === "bar" ? (isDark ? "#fff" : "#000") : null;
 
   Chart.register(ChartDataLabels);
 
@@ -139,7 +147,7 @@ function renderChart(type, forceLightMode = false) {
         data: counts,
         backgroundColor,
         borderColor,
-        borderWidth: actualType === "bar" ? 1 : 0
+        borderWidth: 1
       }]
     },
     options: {
@@ -148,15 +156,21 @@ function renderChart(type, forceLightMode = false) {
       layout: {
         padding: { top: 20 }
       },
-      scales: {
-        y: {
-          ticks: {
-            color: document.body.classList.contains("dark-mode") ? "#fff" : "#000"
-          }
-        },
+      scales: actualType === "pie" ? {} : {
         x: {
           ticks: {
-            color: document.body.classList.contains("dark-mode") ? "#fff" : "#000"
+            color: isDark ? "#fff" : "#000"
+          },
+          grid: {
+            color: isDark ? "#444" : "#ccc"
+          }
+        },
+        y: {
+          ticks: {
+            color: isDark ? "#fff" : "#000"
+          },
+          grid: {
+            color: isDark ? "#444" : "#ccc"
           }
         }
       },
@@ -165,7 +179,7 @@ function renderChart(type, forceLightMode = false) {
           display: actualType === "pie",
           position: "bottom",
           labels: {
-            color: document.body.classList.contains("dark-mode") ? "#fff" : "#000"
+            color: isDark ? "#fff" : "#000"
           }
         },
         tooltip: {
@@ -178,7 +192,7 @@ function renderChart(type, forceLightMode = false) {
           }
         },
         datalabels: {
-          color: document.body.classList.contains("dark-mode") ? "#fff" : "#000",
+          color: isDark ? "#fff" : "#000",
           anchor: actualType === "pie" ? "end" : "end",
           align: actualType === "pie" ? "end" : "right",
           offset: actualType === "pie" ? 8 : 0,
