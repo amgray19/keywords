@@ -1,11 +1,15 @@
-// v1.1.1-safe — PDF works, Word export temporarily disabled due to docx.js MIME issue
+let chartInstance = null;
+let lastParsedData = [];
 
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
+  const ctx = document.getElementById("chart").getContext("2d");
+  ctx.clearRect(0, 0, 600, 400);
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = null;
+  lastParsedData = [];
 });
-
-let lastParsedData = []; // Cache parsed results for export
 
 document.getElementById("generate").addEventListener("click", () => {
   const output = document.getElementById("output");
@@ -70,52 +74,11 @@ document.getElementById("generate").addEventListener("click", () => {
 
           section.innerHTML += summaryHTML + resultsHTML;
           output.appendChild(section);
+
+          renderChart("bar");
         });
     };
     reader.readAsArrayBuffer(file);
-  });
-});
-
-document.getElementById("download-word").addEventListener("click", () => {
-  if (!lastParsedData.length) {
-    alert("Generate summary first.");
-    return;
-  }
-
-  const doc = new docx.Document();
-
-  lastParsedData.forEach(file => {
-    doc.addSection({
-      children: [
-        new docx.Paragraph({ text: `=== File: ${file.filename} ===`, heading: docx.HeadingLevel.HEADING_2 }),
-        new docx.Paragraph({ text: "Summary:", heading: docx.HeadingLevel.HEADING_3 }),
-        ...Object.entries(file.summary).map(([k, p]) =>
-          new docx.Paragraph(`- ${k} — ${p.length} match(es) (Pages ${[...new Set(p)].join(", ")})`)
-        ),
-        new docx.Paragraph({ text: "Matched Sentences:", heading: docx.HeadingLevel.HEADING_3 }),
-        ...file.results.map(entry => {
-          const p = new docx.Paragraph({ children: [] });
-          p.addRun(new docx.TextRun(`Page ${entry.page}: “`));
-          const split = entry.raw.split(new RegExp(`(${entry.keyword})`, "i"));
-          split.forEach(part => {
-            if (part.toLowerCase() === entry.keyword.toLowerCase()) {
-              p.addRun(new docx.TextRun(part).bold().color("FF0000").highlight("yellow"));
-            } else {
-              p.addRun(new docx.TextRun(part));
-            }
-          });
-          p.addRun(new docx.TextRun("”"));
-          return p;
-        })
-      ]
-    });
-  });
-
-  docx.Packer.toBlob(doc).then(blob => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "Keyword_Summary.docx";
-    a.click();
   });
 });
 
@@ -127,8 +90,49 @@ document.getElementById("download-pdf").addEventListener("click", () => {
   }
 
   html2pdf().set({
-  margin: [0.5, 0.5, 0.5, 0.5],
-  filename: "Keyword_Summary.pdf",
-  html2canvas: { scale: 2 },
-  jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, filename: "Keyword_Summary.pdf", html2canvas: { scale: 2 } }).from(element).save();
+    margin: [0.5, 0.5, 0.5, 0.5],
+    filename: "Keyword_Summary.pdf",
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+  }).from(element).save();
 });
+
+function renderChart(type) {
+  if (!lastParsedData.length) return;
+
+  const ctx = document.getElementById("chart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  const keywordCounts = {};
+  lastParsedData.forEach(file => {
+    Object.entries(file.summary).forEach(([keyword, pages]) => {
+      keywordCounts[keyword] = (keywordCounts[keyword] || 0) + pages.length;
+    });
+  });
+
+  const keywords = Object.keys(keywordCounts);
+  const counts = Object.values(keywordCounts);
+
+  chartInstance = new Chart(ctx, {
+    type: (type === "bar" && keywords.length > 6) ? "bar" : type,
+    data: {
+      labels: keywords,
+      datasets: [{
+        label: "Keyword Matches",
+        data: counts,
+        backgroundColor: keywords.map(() => `hsl(${Math.random()*360}, 70%, 70%)`)
+      }]
+    },
+    options: {
+      indexAxis: (type === "bar" && keywords.length > 6) ? 'y' : 'x',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.parsed.y ?? ctx.parsed} matches` } }
+      },
+      responsive: true
+    }
+  });
+}
+
+document.getElementById("chart-bar").addEventListener("click", () => renderChart("bar"));
+document.getElementById("chart-pie").addEventListener("click", () => renderChart("pie"));
