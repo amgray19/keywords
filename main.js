@@ -98,15 +98,30 @@ document.getElementById("download-pdf").addEventListener("click", () => {
 
   lastParsedData.forEach(file => {
     doc.write(`<div class="section"><h2>Results for: ${file.filename}</h2>`);
-    doc.write("<h3>Summary</h3><ul>");
-    Object.entries(file.summary).forEach(([keyword, pages]) => {
-      doc.write(`<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})</li>`);
-    });
-    doc.write("</ul><h3>Matched Sentences</h3><ul>");
-    file.results.forEach(entry => {
-      doc.write(`<li><strong>Sentence ${entry.page}:</strong> “${entry.raw}”</li>`);
-    });
-    doc.write("</ul></div>");
+    
+    const summaryData = Object.entries(file.summary);
+    const resultData = file.results;
+
+    doc.write("<h3>Summary</h3>");
+    if (summaryData.length === 0) {
+      doc.write("<p>No results found.</p>");
+    } else {
+      doc.write("<ul>");
+      summaryData.forEach(([keyword, pages]) => {
+        doc.write(`<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})</li>`);
+      });
+      doc.write("</ul>");
+    }
+
+    if (resultData.length) {
+      doc.write("<h3>Matched Sentences</h3><ul>");
+      resultData.forEach(entry => {
+        doc.write(`<li><strong>Sentence ${entry.page}:</strong> “${entry.raw}”</li>`);
+      });
+      doc.write("</ul>");
+    }
+
+    doc.write("</div>");
   });
 
   doc.write("</body></html>");
@@ -147,24 +162,29 @@ function renderOutput() {
       section.classList.add("file-section");
       section.innerHTML = `<h2>Results for: ${file.filename}</h2>`;
 
-      let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
-      Object.entries(file.summary).forEach(([keyword, pages]) => {
-        if (!filter || keyword === filter) {
+      const summaryData = Object.entries(file.summary).filter(([k, _]) => !filter || k === filter);
+      const resultData = file.results.filter(entry => !filter || entry.keyword === filter);
+
+      let summaryHTML = "<div class='summary'><h3>Summary</h3>";
+      if (summaryData.length === 0) {
+        summaryHTML += "<p>No results found.</p>";
+      } else {
+        summaryHTML += "<ul>";
+        summaryData.forEach(([keyword, pages]) => {
           const pageStr = [...new Set(pages)].join(", ");
           summaryHTML += `<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
-        }
-      });
-      summaryHTML += "</ul></div>";
+        });
+        summaryHTML += "</ul>";
+      }
+      summaryHTML += "</div>";
 
       let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-      file.results.forEach(entry => {
-        if (!filter || entry.keyword === filter) {
-          resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
-        }
+      resultData.forEach(entry => {
+        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
       });
       resultsHTML += "</ul></div>";
 
-      section.innerHTML += summaryHTML + resultsHTML;
+      section.innerHTML += summaryHTML + (resultData.length ? resultsHTML : "");
       output.appendChild(section);
     });
   } else {
@@ -177,6 +197,14 @@ function renderOutput() {
         }
       });
     });
+
+    if (Object.keys(keywordMap).length === 0) {
+      const section = document.createElement("div");
+      section.classList.add("file-section");
+      section.innerHTML = `<h2>Results by Keyword</h2><div class='summary'><p>No results found.</p></div>`;
+      output.appendChild(section);
+      return;
+    }
 
     Object.entries(keywordMap).forEach(([keyword, entries]) => {
       const section = document.createElement("div");
