@@ -94,7 +94,7 @@ document.getElementById("download-pdf").addEventListener("click", () => {
 
   const chartCanvas = document.getElementById("chart");
   const chartImgData = chartCanvas.toDataURL("image/png");
-  doc.write(`<img src="${chartImgData}" alt="Chart">`);
+  doc.write(`<img src="${chartImgData}" alt="Chart" style="width: 80%; max-width: 600px; display: block; margin: 0 auto 1em auto;">`);
 
   lastParsedData.forEach(file => {
     doc.write(`<div class="section"><h2>Results for: ${file.filename}</h2>`);
