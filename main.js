@@ -115,6 +115,7 @@ function renderChart(type) {
 
   const keywords = Object.keys(keywordCounts);
   const counts = Object.values(keywordCounts);
+  const total = counts.reduce((a, b) => a + b, 0);
   const actualType = type === "bar" && keywords.length > 6 ? "bar" : type;
   const indexAxis = actualType === "bar" && keywords.length > 6 ? 'y' : 'x';
 
@@ -132,10 +133,17 @@ function renderChart(type) {
       indexAxis,
       responsive: true,
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: actualType === "pie",
+          position: "bottom"
+        },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.parsed.y ?? ctx.parsed} matches`
+            label: (ctx) => {
+              const count = ctx.raw;
+              const percent = ((count / total) * 100).toFixed(1);
+              return `${ctx.label}: ${count} match(es) (${percent}%)`;
+            }
           }
         }
       }
