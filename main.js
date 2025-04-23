@@ -4,7 +4,6 @@ let lastParsedData = [];
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
-  document.getElementById("pdf-export").innerHTML = "";
   if (chartInstance) chartInstance.destroy();
   chartInstance = null;
   lastParsedData = [];
@@ -67,25 +66,28 @@ document.getElementById("generate").addEventListener("click", () => {
 });
 
 document.getElementById("download-pdf").addEventListener("click", () => {
-  const exportDiv = document.getElementById("pdf-export");
-  exportDiv.innerHTML = "";
+  const exportContainer = document.createElement("div");
+  exportContainer.style.padding = "1em";
+  exportContainer.innerHTML = "<h2>Keyword Summary Report</h2>";
 
-  const clonedChart = document.getElementById("chart").cloneNode(true);
-  clonedChart.style.maxWidth = "500px";
+  // Convert chart to image
+  const chartCanvas = document.getElementById("chart");
+  const chartImg = document.createElement("img");
+  chartImg.src = chartCanvas.toDataURL("image/png");
+  chartImg.style.maxWidth = "100%";
+  chartImg.style.marginBottom = "1em";
+  exportContainer.appendChild(chartImg);
 
-  exportDiv.appendChild(document.createElement("hr"));
-  exportDiv.appendChild(clonedChart);
-
+  // Clone the visible output content
   const outputClone = document.getElementById("output").cloneNode(true);
-  outputClone.querySelectorAll("button").forEach(btn => btn.remove());
-  exportDiv.appendChild(outputClone);
+  exportContainer.appendChild(outputClone);
 
   html2pdf().set({
     margin: [0.5, 0.5, 0.5, 0.5],
     filename: "Keyword_Summary.pdf",
     html2canvas: { scale: 2 },
     jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
-  }).from(exportDiv).save();
+  }).from(exportContainer).save();
 });
 
 document.getElementById("chartType").addEventListener("change", e => {
@@ -139,7 +141,7 @@ function renderOutput() {
       output.appendChild(section);
     });
   } else {
-    // Group by keyword across files
+    // Group by keyword
     const keywordMap = {};
     lastParsedData.forEach(file => {
       file.results.forEach(entry => {
