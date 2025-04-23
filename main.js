@@ -292,7 +292,8 @@ function renderChart(type) {
             return document.body.classList.contains("dark-mode") ? "#fff" : "#000";
           },
           anchor: actualType === "pie" ? "end" : "end",
-          align: actualType === "pie" ? "end" : "right",
+          align: actualType === "pie" ? "start" : "right",
+          offset: actualType === "pie" ? -10 : 0,
           font: { weight: "bold" },
           formatter: (value) => {
             const percent = ((value / total) * 100).toFixed(1);
