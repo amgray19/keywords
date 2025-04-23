@@ -68,78 +68,12 @@ document.getElementById("generate").addEventListener("click", () => {
   });
 });
 
-document.getElementById("download-pdf").addEventListener("click", () => {
-  const printWindow = window.open("", "_blank", "width=900,height=1000");
-
-  if (!printWindow) {
-    alert("Popup blocker prevented opening the print window.");
-    return;
-  }
-
-  const doc = printWindow.document;
-  doc.write("<html><head><title>Keyword Summary</title>");
-  doc.write(`
-    <style>
-      body { font-family: Arial, sans-serif; padding: 2em; color: #333; }
-      h1 { margin-top: 0; }
-      ul { padding-left: 1.2em; }
-      li { margin-bottom: 0.5em; }
-      .highlight { background: yellow; font-weight: bold; color: red; }
-      .section { margin-bottom: 2em; }
-      img { width: 80%; max-width: 600px; display: block; margin: 2em auto 1em auto; }
-    </style>
-  `);
-  doc.write("</head><body>");
-  doc.write("<h1>Keyword Summary Report</h1>");
-
-  const chartCanvas = document.getElementById("chart");
-  const chartImgData = chartCanvas.toDataURL("image/png");
-  doc.write(`<img src="${chartImgData}" alt="Chart">`);
-
-  lastParsedData.forEach(file => {
-    doc.write(`<div class="section"><h2>Results for: ${file.filename}</h2>`);
-
-    const summaryData = Object.entries(file.summary);
-    const resultData = file.results;
-
-    doc.write("<h3>Summary</h3>");
-    if (summaryData.length === 0) {
-      doc.write("<p>No results found.</p>");
-    } else {
-      doc.write("<ul>");
-      summaryData.forEach(([keyword, pages]) => {
-        doc.write(`<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})</li>`);
-      });
-      doc.write("</ul>");
-    }
-
-    if (resultData.length) {
-      doc.write("<h3>Matched Sentences</h3><ul>");
-      resultData.forEach(entry => {
-        doc.write(`<li><strong>Sentence ${entry.page}:</strong> “${entry.raw}”</li>`);
-      });
-      doc.write("</ul>");
-    }
-
-    doc.write("</div>");
-  });
-
-  doc.write("</body></html>");
-  doc.close();
-
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
-});
-
 document.getElementById("chartType").addEventListener("change", e => {
   renderChart(e.target.value);
 });
 document.getElementById("filterKeyword").addEventListener("change", renderOutput);
 document.getElementById("viewMode").addEventListener("change", renderOutput);
 
-// When dark mode toggles, re-render chart with new label colors
 document.getElementById("toggle-theme").addEventListener("click", () => {
   const current = localStorage.getItem("theme") || "light";
   const newMode = current === "dark" ? "light" : "dark";
@@ -160,81 +94,6 @@ function updateFilterOptions(keywordList) {
   });
 }
 
-function renderOutput() {
-  const output = document.getElementById("output");
-  output.innerHTML = "";
-  const filter = document.getElementById("filterKeyword").value;
-  const viewMode = document.getElementById("viewMode").value;
-
-  if (viewMode === "file") {
-    lastParsedData.forEach(file => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for: ${file.filename}</h2>`;
-
-      const summaryData = Object.entries(file.summary).filter(([k, _]) => !filter || k === filter);
-      const resultData = file.results.filter(entry => !filter || entry.keyword === filter);
-
-      let summaryHTML = "<div class='summary'><h3>Summary</h3>";
-      if (summaryData.length === 0) {
-        summaryHTML += "<p>No results found.</p>";
-      } else {
-        summaryHTML += "<ul>";
-        summaryData.forEach(([keyword, pages]) => {
-          const pageStr = [...new Set(pages)].join(", ");
-          summaryHTML += `<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
-        });
-        summaryHTML += "</ul>";
-      }
-      summaryHTML += "</div>";
-
-      let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-      resultData.forEach(entry => {
-        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
-      });
-      resultsHTML += "</ul></div>";
-
-      section.innerHTML += summaryHTML + (resultData.length ? resultsHTML : "");
-      output.appendChild(section);
-    });
-  } else {
-    const keywordMap = {};
-    lastParsedData.forEach(file => {
-      file.results.forEach(entry => {
-        if (!filter || entry.keyword === filter) {
-          keywordMap[entry.keyword] = keywordMap[entry.keyword] || [];
-          keywordMap[entry.keyword].push({ ...entry, file: file.filename });
-        }
-      });
-    });
-
-    if (Object.keys(keywordMap).length === 0) {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results by Keyword</h2><div class='summary'><p>No results found.</p></div>`;
-      output.appendChild(section);
-      return;
-    }
-
-    Object.entries(keywordMap).forEach(([keyword, entries]) => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for: ${keyword}</h2>`;
-
-      const summaryHTML = `<div class='summary'><h3>Summary</h3><ul><li><strong>${keyword}</strong> — ${entries.length} match(es) across ${new Set(entries.map(e => e.file)).size} file(s)</li></ul></div>`;
-
-      let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-      entries.forEach(entry => {
-        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> [${entry.file}] “${entry.html}”</li>`;
-      });
-      resultsHTML += "</ul></div>";
-
-      section.innerHTML += summaryHTML + resultsHTML;
-      output.appendChild(section);
-    });
-  }
-}
-
 function renderChart(type) {
   if (!lastParsedData.length) return;
 
@@ -245,6 +104,7 @@ function renderChart(type) {
 
   if (chartInstance) chartInstance.destroy();
 
+  // Sort keywords alphabetically
   const keywordCounts = {};
   lastParsedData.forEach(file => {
     Object.entries(file.summary).forEach(([keyword, pages]) => {
@@ -252,11 +112,19 @@ function renderChart(type) {
     });
   });
 
-  const keywords = Object.keys(keywordCounts);
-  const counts = Object.values(keywordCounts);
+  const sortedEntries = Object.entries(keywordCounts).sort(([a], [b]) => a.localeCompare(b));
+  const keywords = sortedEntries.map(([k]) => k);
+  const counts = sortedEntries.map(([, v]) => v);
   const total = counts.reduce((a, b) => a + b, 0);
+
   const actualType = type === "bar" && keywords.length > 6 ? "bar" : type;
   const indexAxis = actualType === "bar" && keywords.length > 6 ? 'y' : 'x';
+
+  const pastelColor = (i, total) => {
+    const hue = (360 * i / total);
+    return `hsl(${hue}, 80%, 75%)`;
+  };
+  const backgroundColor = keywords.map((_, i) => pastelColor(i, keywords.length));
 
   Chart.register(ChartDataLabels);
 
@@ -267,12 +135,15 @@ function renderChart(type) {
       datasets: [{
         label: "Keyword Matches",
         data: counts,
-        backgroundColor: keywords.map(() => `hsl(${Math.random()*360}, 70%, 70%)`)
+        backgroundColor
       }]
     },
     options: {
       indexAxis,
       responsive: true,
+      layout: {
+        padding: { top: 20 } // Prevent label cutoff
+      },
       plugins: {
         legend: {
           display: actualType === "pie",
@@ -288,16 +159,15 @@ function renderChart(type) {
           }
         },
         datalabels: {
-          color: () => {
-            return document.body.classList.contains("dark-mode") ? "#fff" : "#000";
-          },
+          color: () => document.body.classList.contains("dark-mode") ? "#fff" : "#000",
           anchor: actualType === "pie" ? "end" : "end",
           align: actualType === "pie" ? "start" : "right",
           offset: actualType === "pie" ? -10 : 0,
           font: { weight: "bold" },
-          formatter: (value) => {
-            const percent = ((value / total) * 100).toFixed(1);
-            return `${value} (${percent}%)`;
+          formatter: (value, ctx) => {
+            const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            const percent = (value / sum) * 100;
+            return percent < 5 ? '' : `${value} (${percent.toFixed(1)}%)`;
           }
         }
       }
