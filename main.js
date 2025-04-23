@@ -67,7 +67,7 @@ document.getElementById("generate").addEventListener("click", () => {
 
         let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
         results.forEach(entry => {
-          resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}: “${entry.html}”</strong></li>`;
+          resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
         });
         resultsHTML += "</ul></div>";
         section.innerHTML += summaryHTML + resultsHTML;
