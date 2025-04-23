@@ -66,14 +66,12 @@ document.getElementById("generate").addEventListener("click", () => {
         summaryHTML += "</ul></div>";
 
         let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-results.forEach(entry => {
-  resultsHTML += `<li class="result-sentence">Sentence ${entry.page}: “${entry.html}”</li>`;
-});
-resultsHTML += "</ul></div>";
-
+        results.forEach(entry => {
+          resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}: “${entry.html}”</strong></li>`;
+        });
+        resultsHTML += "</ul></div>";
         section.innerHTML += summaryHTML + resultsHTML;
         output.appendChild(section);
-
         renderChart(document.getElementById("chartType").value);
       });
     };
