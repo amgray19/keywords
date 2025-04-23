@@ -39,10 +39,11 @@
     }
     button:hover { background-color: #005fa3; }
     canvas {
-      border: 1px solid #ccc;
+      border: none;
       border-radius: 6px;
       background: #fff;
       padding: 0.5em;
+      display: none;
     }
     .summary, .results {
       margin-top: 2em;
@@ -60,10 +61,10 @@
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.2</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.2-final</div>
 
   <div class="flex-row">
-    <!-- LEFT: Logo + Instructions + Upload -->
+    <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
     <div style="flex: 2;">
       <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
       <h2>Instructions:</h2>
@@ -71,7 +72,6 @@
         <li>Edit the keyword list or add new ones (one per line).</li>
         <li>Upload one or more Word <code>.docx</code> files.</li>
         <li>Click “Generate Summary” to process them.</li>
-        <li>Use dropdowns to filter or group results.</li>
         <li>Click “Download PDF Summary” to save the results.</li>
       </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
@@ -80,40 +80,36 @@
         <button id="generate">Generate Summary</button>
         <button id="download-pdf">Download PDF Summary</button>
         <button id="reset">Reset</button>
+
+        <label for="chartType" style="margin-top: 1em; display: block;"><strong>Chart Type:</strong></label>
+        <select id="chartType">
+          <option value="bar">Bar Chart</option>
+          <option value="pie">Pie Chart</option>
+        </select>
+
+        <label for="filterKeyword" style="margin-top: 1em;"><strong>Filter by Keyword:</strong></label>
+        <select id="filterKeyword">
+          <option value="">(Show All)</option>
+        </select>
+
+        <label for="viewMode" style="margin-top: 1em;"><strong>Group Results By:</strong></label>
+        <select id="viewMode">
+          <option value="file">File</option>
+          <option value="keyword">Keyword</option>
+        </select>
       </div>
     </div>
 
-    <!-- RIGHT: Keywords + Chart + Filters -->
+    <!-- RIGHT: Keywords + Chart -->
     <div style="flex: 1; min-width: 260px;">
       <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
       <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
-
-      <label for="chartType"><strong>Chart Type:</strong></label>
-      <select id="chartType">
-        <option value="bar">Bar Chart</option>
-        <option value="pie">Pie Chart</option>
-      </select>
-
-      <label for="filterKeyword" style="margin-top: 1em;"><strong>Filter by Keyword:</strong></label>
-      <select id="filterKeyword">
-        <option value="">(Show All)</option>
-      </select>
-
-      <label for="viewMode" style="margin-top: 1em;"><strong>Group Results By:</strong></label>
-      <select id="viewMode">
-        <option value="file">File</option>
-        <option value="keyword">Keyword</option>
-      </select>
-
       <canvas id="chart" width="400" height="400" style="margin-top: 1em;"></canvas>
     </div>
   </div>
 
   <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
-
-  <!-- PDF EXPORT WRAPPER (hidden) -->
-  <div id="pdf-export" style="display:none;"></div>
 
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
