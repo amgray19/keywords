@@ -4,7 +4,6 @@ let lastParsedData = [];
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
-  document.getElementById("printable").innerHTML = "";
   const chart = document.getElementById("chart");
   chart.style.display = "none";
   chart.style.border = "none";
@@ -70,51 +69,53 @@ document.getElementById("generate").addEventListener("click", () => {
 });
 
 document.getElementById("download-pdf").addEventListener("click", () => {
-  const printable = document.getElementById("printable");
-  printable.innerHTML = "<h2>Keyword Summary Report</h2>";
+  const printWindow = window.open("", "_blank", "width=900,height=1000");
 
-  // Chart as image
+  if (!printWindow) {
+    alert("Popup blocker prevented opening the print window.");
+    return;
+  }
+
+  const doc = printWindow.document;
+  doc.write("<html><head><title>Keyword Summary</title>");
+  doc.write(`
+    <style>
+      body { font-family: Arial, sans-serif; padding: 2em; color: #333; }
+      h1 { margin-top: 0; }
+      ul { padding-left: 1.2em; }
+      li { margin-bottom: 0.5em; }
+      .highlight { background: yellow; font-weight: bold; color: red; }
+      .section { margin-bottom: 2em; }
+      img { max-width: 100%; margin-bottom: 1em; }
+    </style>
+  `);
+  doc.write("</head><body>");
+  doc.write("<h1>Keyword Summary Report</h1>");
+
   const chartCanvas = document.getElementById("chart");
-  const chartImg = document.createElement("img");
-  chartImg.src = chartCanvas.toDataURL("image/png");
-  chartImg.style.maxWidth = "100%";
-  chartImg.style.marginBottom = "1em";
-  printable.appendChild(chartImg);
+  const chartImgData = chartCanvas.toDataURL("image/png");
+  doc.write(`<img src="${chartImgData}" alt="Chart">`);
 
-  // Summary + Results
   lastParsedData.forEach(file => {
-    const section = document.createElement("div");
-    section.style.marginBottom = "1em";
-
-    const title = document.createElement("h3");
-    title.textContent = `Results for: ${file.filename}`;
-    section.appendChild(title);
-
-    const summary = document.createElement("ul");
+    doc.write(`<div class="section"><h2>Results for: ${file.filename}</h2>`);
+    doc.write("<h3>Summary</h3><ul>");
     Object.entries(file.summary).forEach(([keyword, pages]) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})`;
-      summary.appendChild(li);
+      doc.write(`<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})</li>`);
     });
-    section.appendChild(summary);
-
-    const results = document.createElement("ul");
+    doc.write("</ul><h3>Matched Sentences</h3><ul>");
     file.results.forEach(entry => {
-      const li = document.createElement("li");
-      li.innerHTML = `<strong>Sentence ${entry.page}:</strong> “${entry.raw}”`;
-      results.appendChild(li);
+      doc.write(`<li><strong>Sentence ${entry.page}:</strong> “${entry.raw}”</li>`);
     });
-    section.appendChild(results);
-
-    printable.appendChild(section);
+    doc.write("</ul></div>");
   });
 
-  html2pdf().set({
-    margin: 0.5,
-    filename: "Keyword_Summary.pdf",
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
-  }).from(printable).save();
+  doc.write("</body></html>");
+  doc.close();
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+  };
 });
 
 document.getElementById("chartType").addEventListener("change", e => {
