@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,13 +10,8 @@
       background-color: #f9f9f9;
       color: #333;
     }
-    h1 {
-      font-size: 1.8em;
-      margin-bottom: 0.5em;
-    }
-    .section {
-      margin-bottom: 2em;
-    }
+    h1 { font-size: 1.8em; margin-bottom: 0.5em; }
+    .section { margin-bottom: 2em; }
     textarea, input[type="file"] {
       width: 100%;
       padding: 0.5em;
@@ -35,14 +29,8 @@
       margin-right: 0.5em;
       margin-top: 1em;
     }
-    button:hover {
-      background-color: #005fa3;
-    }
-    .highlight {
-      font-weight: bold;
-      color: red;
-      background: yellow;
-    }
+    button:hover { background-color: #005fa3; }
+    .highlight { font-weight: bold; color: red; background: yellow; }
     .summary, .results {
       margin-top: 2em;
       padding: 1em;
@@ -50,62 +38,53 @@
       border-radius: 5px;
       background: #fff;
     }
-    .summary h2, .results h2 {
-      margin-top: 0;
-    }
-    .result-sentence {
-      margin-bottom: 1em;
-    }
-    .file-section {
-      margin-top: 3em;
-      border-top: 2px solid #aaa;
-      padding-top: 1.5em;
-    }
+    .file-section { margin-top: 3em; border-top: 2px solid #aaa; padding-top: 1.5em; }
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.1-safe</div>
-  <img src="logo.png" Alt="Highlight Tool Logo" width="500" height="159">
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.2</div>
+  <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
 
-<!-- FLEX ROW: Instructions + Keyword List -->
-<div style="display: flex; gap: 2em; align-items: flex-start; margin-bottom: 1.5em;">
-  <!-- LEFT: Instructions -->
-  <div style="flex: 2; min-width: 300px;">
-    <h2>Instructions:</h2>
-    <ul style="margin-top: 0;">
-      <li>Add to/edit the keywords list as needed. It currently pre-loads a master list.</li>
-      <li>Upload one or more Word <code>.docx</code> files for checking. (This does not support older <code>.doc</code> files.)</li>
-      <li>Click “Generate Summary” to show the found keywords in the document(s).</li>
-      <li>Click either “Download Word Summary" (currently disabled) or “Download PDF Summary” to save the results.</li>
-      <li>Hit reset to upload a new set of files and start over.</li>
-    </ul>
+  <div style="display: flex; gap: 2em; align-items: flex-start; margin-bottom: 1.5em;">
+    <div style="flex: 2; min-width: 300px;">
+      <h2>Instructions:</h2>
+      <ul>
+        <li>Edit the keyword list or add new ones (one per line).</li>
+        <li>Upload one or more Word <code>.docx</code> files.</li>
+        <li>Click “Generate Summary” to process them.</li>
+        <li>Click “Download PDF Summary” to save the results.</li>
+        <li>Use the chart buttons to switch between bar or pie view.</li>
+        <li>Hit Reset to start over.</li>
+      </ul>
+    </div>
+    <div style="flex: 1; min-width: 240px;">
+      <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
+      <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
+    </div>
   </div>
 
-  <!-- RIGHT: Keywords -->
-  <div style="flex: 1; min-width: 240px;">
-    <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label><br>
-    <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..." style="width: 100%; margin-top: 0.5em;"></textarea>
+  <div>
+    <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
+    <input type="file" id="upload" accept=".docx" multiple />
+    <div>
+      <button id="generate">Generate Summary</button>
+      <button id="download-pdf">Download PDF Summary</button>
+      <button id="reset">Reset</button>
+    </div>
   </div>
-</div>
 
-<!-- FULL-WIDTH: Upload & Buttons -->
-<div style="margin-bottom: 2em;">
-  <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
-  <input type="file" id="upload" accept=".docx" multiple style="margin-top: 0.5em;" />
-  <div style="margin-top: 1em;">
-    <button id="generate">Generate Summary</button>
-    <button id="download-word">Download Word Summary</button>
-    <button id="download-pdf">Download PDF Summary</button>
-    <button id="reset">Reset</button>
+  <div style="margin-top: 2em;">
+    <label><strong>Chart Type:</strong></label><br>
+    <button id="chart-bar">Bar Chart</button>
+    <button id="chart-pie">Pie Chart</button>
   </div>
-</div>
 
   <div id="output"></div>
+  <canvas id="chart" width="600" height="400" style="margin-top: 2em;"></canvas>
 
   <script src="main.js"></script>
-<script src="docx.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     fetch('keywords.txt')
