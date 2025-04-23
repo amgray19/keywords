@@ -3,35 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <title>Federal Forbidden Keyword Search Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --bg: #f9f9f9;
+      --text: #333;
+      --panel: #fff;
+      --border: #ccc;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --text: #eee;
+        --panel: #1e1e1e;
+        --border: #444;
+      }
+    }
+
+    body.dark-mode {
+      --bg: #121212;
+      --text: #eee;
+      --panel: #1e1e1e;
+      --border: #444;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 2em;
-      background-color: #f9f9f9;
-      color: #333;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: all 0.3s ease;
     }
+
     .highlight {
       font-weight: bold;
       color: red;
       background: yellow;
     }
+
     .flex-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: flex-start;
-      gap: 0.75em;
+      gap: 1.5em;
     }
-    textarea, input[type="file"] {
+
+    textarea, input[type="file"], select {
       width: 100%;
       padding: 0.5em;
       font-size: 1em;
       margin-top: 0.5em;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 5px;
     }
-    select {
-      padding: 0.5em;
-      font-size: 1em;
-      margin-top: 1em;
-      margin-right: 0.5em;
-    }
+
     button {
       padding: 0.6em 1em;
       font-size: 1em;
@@ -43,63 +71,101 @@
       margin-right: 0.5em;
       margin-top: 1em;
     }
+
     button:hover { background-color: #005fa3; }
+
     canvas {
-      border: none;
       border-radius: 6px;
-      background: #fff;
+      background: var(--panel);
       padding: 0.5em;
       display: none;
     }
+
     .summary, .results {
       margin-top: 2em;
       padding: 1em;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border);
       border-radius: 5px;
-      background: #fff;
+      background: var(--panel);
     }
+
     .file-section {
       margin-top: 3em;
-      border-top: 2px solid #aaa;
+      border-top: 2px solid var(--border);
       padding-top: 1.5em;
     }
+
     .controls { margin-top: 1em; }
-    .dropdown-row { display: flex; flex-wrap: wrap; gap: 1em; margin-top: 1em; }
+
+    .dropdown-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+      margin-top: 1em;
+    }
+
+    .dropdown-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .dropdown-group label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.25em;
+    }
+
+    @media (max-width: 768px) {
+      .flex-row {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.3</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.4</div>
 
   <div class="flex-row">
     <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
     <div style="flex: 2;">
-      <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
+      <img src="logo.png" alt="Highlight Tool Logo" style="max-width: 100%; height: auto;">
       <h2>Instructions:</h2>
       <ul>
         <li>Edit the keyword list or add new ones (one per line).</li>
         <li>Upload one or more Word <code>.docx</code> files.</li>
         <li>Click “Generate Summary” to process them.</li>
-        <li>Click “Print or Save Summary” to save the results.</li>
+        <li>Click “Print or Save Summary” to export the results.</li>
       </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
+
       <div class="controls">
         <button id="generate">Generate Summary</button>
         <button id="download-pdf">Print or Save Summary</button>
         <button id="reset">Reset</button>
+        <button id="toggle-theme">Toggle Dark Mode</button>
 
         <div class="dropdown-row">
-          <select id="chartType">
-            <option value="bar">Bar Chart</option>
-            <option value="pie">Pie Chart</option>
-          </select>
-          <select id="filterKeyword">
-            <option value="">(Show All Keywords)</option>
-          </select>
-          <select id="viewMode">
-            <option value="file">Group by File</option>
-            <option value="keyword">Group by Keyword</option>
-          </select>
+          <div class="dropdown-group">
+            <label for="chartType">Chart Type</label>
+            <select id="chartType">
+              <option value="bar">Bar Chart</option>
+              <option value="pie">Pie Chart</option>
+            </select>
+          </div>
+          <div class="dropdown-group">
+            <label for="filterKeyword">Filter by Keyword</label>
+            <select id="filterKeyword">
+              <option value="">(Show All)</option>
+            </select>
+          </div>
+          <div class="dropdown-group">
+            <label for="viewMode">Group Results</label>
+            <select id="viewMode">
+              <option value="file">By File</option>
+              <option value="keyword">By Keyword</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -115,6 +181,7 @@
   <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
 
+  <!-- Scripts -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
@@ -124,6 +191,11 @@
       .then(text => {
         document.getElementById('keywords').value = text.trim();
       });
+
+    // Dark mode toggle
+    document.getElementById("toggle-theme").addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
   </script>
 </body>
 </html>
