@@ -15,8 +15,7 @@ document.getElementById("reset").addEventListener("click", () => {
 });
 
 document.getElementById("generate").addEventListener("click", () => {
-  const output = document.getElementById("output");
-  output.innerHTML = "";
+  document.getElementById("output").innerHTML = "";
   lastParsedData = [];
 
   const keywordList = document.getElementById("keywords").value.split(/\r?\n/).map(k => k.trim()).filter(k => k);
@@ -60,7 +59,7 @@ document.getElementById("generate").addEventListener("click", () => {
 
         lastParsedData.push({ filename: file.name, summary, results });
         updateFilterOptions(Array.from(allKeywordsSet).sort());
-        renderChart(document.getElementById("chartType").value, false); // normal render
+        renderChart(document.getElementById("chartType").value, false);
         renderOutput();
       });
     };
@@ -69,17 +68,10 @@ document.getElementById("generate").addEventListener("click", () => {
 });
 
 document.getElementById("download-pdf").addEventListener("click", () => {
-  renderChart(document.getElementById("chartType").value, true); // light-mode chart for export
-
-  setTimeout(() => {
-    const printWindow = window.open("", "_blank", "width=900,height=1000");
-    if (!printWindow) {
-      alert("Popup blocker prevented opening the print window.");
-      return;
-    }
-
-    const doc = printWindow.document;
+  renderChart(document.getElementById("chartType").value, true, () => {
     const chartImgData = document.getElementById("chart").toDataURL("image/png");
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    const doc = printWindow.document;
 
     doc.write("<html><head><title>Keyword Summary</title><style>");
     doc.write(`
@@ -102,11 +94,11 @@ document.getElementById("download-pdf").addEventListener("click", () => {
       printWindow.focus();
       printWindow.print();
     };
-  }, 300); // delay to allow chart re-render
+  });
 });
 
 document.getElementById("chartType").addEventListener("change", e => {
-  renderChart(e.target.value, false);
+  renderChart(e.target.value);
 });
 document.getElementById("filterKeyword").addEventListener("change", renderOutput);
 document.getElementById("viewMode").addEventListener("change", renderOutput);
@@ -117,7 +109,7 @@ document.getElementById("toggle-theme").addEventListener("click", () => {
   localStorage.setItem("theme", newMode);
   document.body.classList.remove("dark-mode", "light-mode");
   document.body.classList.add(`${newMode}-mode`);
-  renderChart(document.getElementById("chartType").value, false);
+  renderChart(document.getElementById("chartType").value);
 });
 
 function updateFilterOptions(keywordList) {
@@ -131,7 +123,7 @@ function updateFilterOptions(keywordList) {
   });
 }
 
-function renderChart(type, forceLightMode = false) {
+function renderChart(type, forceLightMode = false, onComplete = null) {
   if (!lastParsedData.length) return;
 
   const ctx = document.getElementById("chart").getContext("2d");
@@ -152,7 +144,6 @@ function renderChart(type, forceLightMode = false) {
   const keywords = sortedEntries.map(([k]) => k);
   const counts = sortedEntries.map(([, v]) => v);
   const total = counts.reduce((a, b) => a + b, 0);
-
   const actualType = type === "bar" && keywords.length > 6 ? "bar" : type;
   const indexAxis = actualType === "bar" && keywords.length > 6 ? 'y' : 'x';
 
@@ -177,13 +168,21 @@ function renderChart(type, forceLightMode = false) {
     options: {
       indexAxis,
       responsive: true,
+      animation: {
+        onComplete: () => {
+          if (typeof onComplete === "function") onComplete();
+        }
+      },
       layout: {
         padding: { top: 20 }
       },
       plugins: {
         legend: {
           display: actualType === "pie",
-          position: "bottom"
+          position: "bottom",
+          labels: {
+            color: document.body.classList.contains("dark-mode") && !forceLightMode ? "#fff" : "#000"
+          }
         },
         tooltip: {
           callbacks: {
@@ -195,10 +194,7 @@ function renderChart(type, forceLightMode = false) {
           }
         },
         datalabels: {
-          color: () => {
-            const mode = forceLightMode ? "light" : (document.body.classList.contains("dark-mode") ? "dark" : "light");
-            return mode === "dark" ? "#fff" : "#000";
-          },
+          color: "#000",
           anchor: actualType === "pie" ? "end" : "end",
           align: actualType === "pie" ? "start" : "right",
           offset: actualType === "pie" ? -10 : 0,
@@ -213,79 +209,4 @@ function renderChart(type, forceLightMode = false) {
     },
     plugins: [ChartDataLabels]
   });
-}
-
-function renderOutput() {
-  const output = document.getElementById("output");
-  output.innerHTML = "";
-  const filter = document.getElementById("filterKeyword").value;
-  const viewMode = document.getElementById("viewMode").value;
-
-  if (viewMode === "file") {
-    lastParsedData.forEach(file => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for: ${file.filename}</h2>`;
-
-      const summaryData = Object.entries(file.summary).filter(([k, _]) => !filter || k === filter);
-      const resultData = file.results.filter(entry => !filter || entry.keyword === filter);
-
-      let summaryHTML = "<div class='summary'><h3>Summary</h3>";
-      if (summaryData.length === 0) {
-        summaryHTML += "<p>No results found.</p>";
-      } else {
-        summaryHTML += "<ul>";
-        summaryData.forEach(([keyword, pages]) => {
-          const pageStr = [...new Set(pages)].join(", ");
-          summaryHTML += `<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
-        });
-        summaryHTML += "</ul>";
-      }
-      summaryHTML += "</div>";
-
-      let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-      resultData.forEach(entry => {
-        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
-      });
-      resultsHTML += "</ul></div>";
-
-      section.innerHTML += summaryHTML + (resultData.length ? resultsHTML : "");
-      output.appendChild(section);
-    });
-  } else {
-    const keywordMap = {};
-    lastParsedData.forEach(file => {
-      file.results.forEach(entry => {
-        if (!filter || entry.keyword === filter) {
-          keywordMap[entry.keyword] = keywordMap[entry.keyword] || [];
-          keywordMap[entry.keyword].push({ ...entry, file: file.filename });
-        }
-      });
-    });
-
-    if (Object.keys(keywordMap).length === 0) {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results by Keyword</h2><div class='summary'><p>No results found.</p></div>`;
-      output.appendChild(section);
-      return;
-    }
-
-    Object.entries(keywordMap).forEach(([keyword, entries]) => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for: ${keyword}</h2>`;
-
-      const summaryHTML = `<div class='summary'><h3>Summary</h3><ul><li><strong>${keyword}</strong> — ${entries.length} match(es) across ${new Set(entries.map(e => e.file)).size} file(s)</li></ul></div>`;
-
-      let resultsHTML = "<div class='results'><h3>Matched Sentences</h3><ul>";
-      entries.forEach(entry => {
-        resultsHTML += `<li class="result-sentence"><strong>Sentence ${entry.page}:</strong> [${entry.file}] “${entry.html}”</li>`;
-      });
-      resultsHTML += "</ul></div>";
-
-      section.innerHTML += summaryHTML + resultsHTML;
-      output.appendChild(section);
-    });
-  }
 }
