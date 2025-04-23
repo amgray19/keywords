@@ -4,6 +4,7 @@ let lastParsedData = [];
 document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
+  document.getElementById("printable").innerHTML = "";
   const chart = document.getElementById("chart");
   chart.style.display = "none";
   chart.style.border = "none";
@@ -69,37 +70,51 @@ document.getElementById("generate").addEventListener("click", () => {
 });
 
 document.getElementById("download-pdf").addEventListener("click", () => {
-  const existingExport = document.getElementById("pdf-temp-export");
-  if (existingExport) existingExport.remove();
+  const printable = document.getElementById("printable");
+  printable.innerHTML = "<h2>Keyword Summary Report</h2>";
 
-  const exportContainer = document.createElement("div");
-  exportContainer.id = "pdf-temp-export";
-  exportContainer.style.position = "absolute";
-  exportContainer.style.left = "-9999px";
-  exportContainer.style.width = "800px";
-  exportContainer.style.padding = "1em";
-  exportContainer.style.background = "#fff";
-  exportContainer.innerHTML = "<h2 style='margin-top: 0;'>Keyword Summary Report</h2>";
-
+  // Chart as image
   const chartCanvas = document.getElementById("chart");
   const chartImg = document.createElement("img");
   chartImg.src = chartCanvas.toDataURL("image/png");
   chartImg.style.maxWidth = "100%";
   chartImg.style.marginBottom = "1em";
-  exportContainer.appendChild(chartImg);
+  printable.appendChild(chartImg);
 
-  const outputClone = document.getElementById("output").cloneNode(true);
-  exportContainer.appendChild(outputClone);
-  document.body.appendChild(exportContainer);
+  // Summary + Results
+  lastParsedData.forEach(file => {
+    const section = document.createElement("div");
+    section.style.marginBottom = "1em";
+
+    const title = document.createElement("h3");
+    title.textContent = `Results for: ${file.filename}`;
+    section.appendChild(title);
+
+    const summary = document.createElement("ul");
+    Object.entries(file.summary).forEach(([keyword, pages]) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})`;
+      summary.appendChild(li);
+    });
+    section.appendChild(summary);
+
+    const results = document.createElement("ul");
+    file.results.forEach(entry => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>Sentence ${entry.page}:</strong> “${entry.raw}”`;
+      results.appendChild(li);
+    });
+    section.appendChild(results);
+
+    printable.appendChild(section);
+  });
 
   html2pdf().set({
     margin: 0.5,
     filename: "Keyword_Summary.pdf",
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
-  }).from(exportContainer).save().then(() => {
-    exportContainer.remove();
-  });
+  }).from(printable).save();
 });
 
 document.getElementById("chartType").addEventListener("change", e => {
@@ -110,7 +125,7 @@ document.getElementById("viewMode").addEventListener("change", renderOutput);
 
 function updateFilterOptions(keywordList) {
   const select = document.getElementById("filterKeyword");
-  select.innerHTML = `<option value="">(Show All)</option>`;
+  select.innerHTML = `<option value="">(Show All Keywords)</option>`;
   keywordList.forEach(k => {
     const option = document.createElement("option");
     option.value = k;
