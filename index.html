@@ -55,12 +55,31 @@
 </head>
 <body>
   <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.4</div>
-  <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
 
-  <!-- FLEX CONTAINER: Instructions + Upload + Chart -->
-  <div class="flex-row" style="margin-bottom: 2em;">
-    
-    <!-- LEFT SIDE: Instructions + Upload -->
+  <!-- TOP ROW: Logo + Keywords/Chart (flex) -->
+  <div class="flex-row" style="align-items: flex-start; gap: 2em;">
+    <!-- LEFT: Logo -->
+    <div style="flex: 1;">
+      <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
+    </div>
+
+    <!-- RIGHT: Keywords + Chart -->
+    <div style="flex: 1; min-width: 240px;">
+      <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
+      <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..." style="width: 100%;"></textarea>
+
+      <label for="chartType" style="margin-top: 1em; display: block;"><strong>Chart Type:</strong></label>
+      <select id="chartType" style="margin-top: 0.5em;">
+        <option value="bar">Bar Chart</option>
+        <option value="pie">Pie Chart</option>
+      </select>
+
+      <canvas id="chart" width="400" height="400" style="margin-top: 1em; border: 1px solid #ccc; border-radius: 6px; background: #fff; padding: 0.5em;"></canvas>
+    </div>
+  </div>
+
+  <!-- NEXT ROW: Instructions + Upload -->
+  <div class="flex-row" style="margin-top: 2em; gap: 2em;">
     <div style="flex: 2; min-width: 300px;">
       <h2>Instructions:</h2>
       <ul>
@@ -72,7 +91,6 @@
         <li>Hit Reset to start over.</li>
       </ul>
 
-      <!-- Upload + Buttons -->
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
       <input type="file" id="upload" accept=".docx" multiple />
       <div>
@@ -81,24 +99,10 @@
         <button id="reset">Reset</button>
       </div>
     </div>
-
-    <!-- RIGHT SIDE: Keywords + Chart -->
-    <div style="flex: 1; min-width: 240px;">
-      <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
-      <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
-
-      <label for="chartType" style="margin-top: 1em; display: block;"><strong>Chart Type:</strong></label>
-      <select id="chartType" style="margin-top: 0.5em;">
-        <option value="bar">Bar Chart</option>
-        <option value="pie">Pie Chart</option>
-      </select>
-
-      <canvas id="chart" width="400" height="400" style="margin-top: 1em;"></canvas>
-    </div>
   </div>
 
-  <!-- OUTPUT SECTION -->
-  <div id="output"></div>
+  <!-- OUTPUT RESULTS SECTION -->
+  <div id="output" style="margin-top: 2em;"></div>
 
   <!-- SCRIPTS -->
   <script src="main.js"></script>
@@ -113,4 +117,3 @@
       });
   </script>
 </body>
-</html>
