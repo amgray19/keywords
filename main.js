@@ -61,7 +61,7 @@ document.getElementById("generate").addEventListener("click", () => {
         let summaryHTML = "<div class='summary'><h3>Summary</h3><ul>";
         Object.entries(summary).forEach(([keyword, pages]) => {
           const pageStr = [...new Set(pages)].join(", ");
-          summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Pages ${pageStr})</li>`;
+          summaryHTML += `<li>${keyword} — ${pages.length} match(es) (Sentences ${pageStr})</li>`;
         });
         summaryHTML += "</ul></div>";
 
