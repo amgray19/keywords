@@ -109,6 +109,11 @@ document.getElementById("toggle-theme").addEventListener("click", () => {
   localStorage.setItem("theme", newMode);
   document.body.classList.remove("dark-mode", "light-mode");
   document.body.classList.add(`${newMode}-mode`);
+
+  // ⬇ Switch logo
+  const logo = document.getElementById("logo");
+  logo.src = newMode === "dark" ? "logo-dark.png" : "logo.png";
+
   renderChart(document.getElementById("chartType").value);
 });
 
@@ -181,7 +186,12 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
           display: actualType === "pie",
           position: "bottom",
           labels: {
-            color: document.body.classList.contains("dark-mode") && !forceLightMode ? "#fff" : "#000"
+            color: () =>
+              forceLightMode
+                ? "#000"
+                : document.body.classList.contains("dark-mode")
+                  ? "#fff"
+                  : "#000"
           }
         },
         tooltip: {
@@ -194,10 +204,15 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
           }
         },
         datalabels: {
-          color: "#000",
+          color: () =>
+            forceLightMode
+              ? "#000"
+              : document.body.classList.contains("dark-mode")
+                ? "#fff"
+                : "#000",
           anchor: actualType === "pie" ? "end" : "end",
-          align: actualType === "pie" ? "start" : "right",
-          offset: actualType === "pie" ? -10 : 0,
+          align: actualType === "pie" ? "end" : "right",
+          offset: actualType === "pie" ? 8 : 0,
           font: { weight: "bold" },
           formatter: (value, ctx) => {
             const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
