@@ -77,6 +77,7 @@
       background: var(--panel);
       padding: 0.5em;
       display: none;
+      margin-bottom: 3em;
     }
 
     .summary, .results {
@@ -121,19 +122,17 @@
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.6</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.8</div>
 
   <div class="flex-row">
-    <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
     <div style="flex: 2;">
-      <img src="logo.png" alt="Highlight Tool Logo" style="max-width: 100%; height: auto;">
+      <img id="logo" src="logo-light.png" alt="Logo" style="max-width: 100%; height: auto;">
       <h2>Instructions:</h2>
       <ul>
         <li>Edit the keyword list or add new ones (one per line).</li>
-        <li>Upload one or more Word <code>.docx</code> files. Older <code>.doc</code> Word files won't work.</li>
+        <li>Upload one or more Word <code>.docx</code> files.</li>
         <li>Click “Generate Summary” to process them.</li>
-        <li>Choose your options for charting, filtering, and sorting results.</li>
-        <li>Click “Print or Save Summary” to export the results (print to PDF).</li>
+        <li>Click “Print or Save Summary” to export the results.</li>
       </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
@@ -146,20 +145,20 @@
 
         <div class="dropdown-row">
           <div class="dropdown-group">
-            <label for="chartType">Chart Type:</label>
+            <label for="chartType">Chart Type</label>
             <select id="chartType">
               <option value="bar">Bar Chart</option>
               <option value="pie">Pie Chart</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="filterKeyword">Filter by Keyword:</label>
+            <label for="filterKeyword">Filter by Keyword</label>
             <select id="filterKeyword">
               <option value="">(Show All)</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="viewMode">Sort Results:</label>
+            <label for="viewMode">Group Results</label>
             <select id="viewMode">
               <option value="file">By File</option>
               <option value="keyword">By Keyword</option>
@@ -169,18 +168,15 @@
       </div>
     </div>
 
-    <!-- RIGHT: Keywords + Chart -->
     <div style="flex: 1; min-width: 260px;">
       <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
       <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
-      <canvas id="chart" width="400" height="400" style="margin-top: 1em;"></canvas>
+      <canvas id="chart" width="400" height="400"></canvas>
     </div>
   </div>
 
-  <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
 
-  <!-- Scripts -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -195,6 +191,7 @@
     window.addEventListener("DOMContentLoaded", () => {
       const saved = localStorage.getItem("theme") || "light";
       document.body.classList.add(`${saved}-mode`);
+      document.getElementById("logo").src = saved === "dark" ? "logo-dark.png" : "logo-light.png";
     });
   </script>
 </body>
