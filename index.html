@@ -48,10 +48,13 @@
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.3</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.4</div>
   <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
 
-  <div class="flex-row" style="margin-bottom: 1.5em;">
+  <!-- FLEX CONTAINER: Instructions + Upload + Chart -->
+  <div class="flex-row" style="margin-bottom: 2em;">
+    
+    <!-- LEFT SIDE: Instructions + Upload -->
     <div style="flex: 2; min-width: 300px;">
       <h2>Instructions:</h2>
       <ul>
@@ -62,7 +65,18 @@
         <li>Use the dropdown to change the chart type.</li>
         <li>Hit Reset to start over.</li>
       </ul>
+
+      <!-- Upload + Buttons -->
+      <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
+      <input type="file" id="upload" accept=".docx" multiple />
+      <div>
+        <button id="generate">Generate Summary</button>
+        <button id="download-pdf">Download PDF Summary</button>
+        <button id="reset">Reset</button>
+      </div>
     </div>
+
+    <!-- RIGHT SIDE: Keywords + Chart -->
     <div style="flex: 1; min-width: 240px;">
       <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
       <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
@@ -77,18 +91,10 @@
     </div>
   </div>
 
-  <div>
-    <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
-    <input type="file" id="upload" accept=".docx" multiple />
-    <div>
-      <button id="generate">Generate Summary</button>
-      <button id="download-pdf">Download PDF Summary</button>
-      <button id="reset">Reset</button>
-    </div>
-  </div>
-
+  <!-- OUTPUT SECTION -->
   <div id="output"></div>
 
+  <!-- SCRIPTS -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
