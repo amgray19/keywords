@@ -20,11 +20,17 @@
       align-items: flex-start;
       gap: 0.75em;
     }
-    textarea, input[type="file"], select {
+    textarea, input[type="file"] {
       width: 100%;
       padding: 0.5em;
       font-size: 1em;
       margin-top: 0.5em;
+    }
+    select {
+      padding: 0.5em;
+      font-size: 1em;
+      margin-top: 1em;
+      margin-right: 0.5em;
     }
     button {
       padding: 0.6em 1em;
@@ -58,10 +64,11 @@
       padding-top: 1.5em;
     }
     .controls { margin-top: 1em; }
+    .dropdown-row { display: flex; flex-wrap: wrap; gap: 1em; margin-top: 1em; }
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.2-final</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.3</div>
 
   <div class="flex-row">
     <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
@@ -81,22 +88,19 @@
         <button id="download-pdf">Download PDF Summary</button>
         <button id="reset">Reset</button>
 
-        <label for="chartType" style="margin-top: 1em; display: block;"><strong>Chart Type:</strong></label>
-        <select id="chartType">
-          <option value="bar">Bar Chart</option>
-          <option value="pie">Pie Chart</option>
-        </select>
-
-        <label for="filterKeyword" style="margin-top: 1em;"><strong>Filter by Keyword:</strong></label>
-        <select id="filterKeyword">
-          <option value="">(Show All)</option>
-        </select>
-
-        <label for="viewMode" style="margin-top: 1em;"><strong>Group Results By:</strong></label>
-        <select id="viewMode">
-          <option value="file">File</option>
-          <option value="keyword">Keyword</option>
-        </select>
+        <div class="dropdown-row">
+          <select id="chartType">
+            <option value="bar">Bar Chart</option>
+            <option value="pie">Pie Chart</option>
+          </select>
+          <select id="filterKeyword">
+            <option value="">(Show All Keywords)</option>
+          </select>
+          <select id="viewMode">
+            <option value="file">Group by File</option>
+            <option value="keyword">Group by Keyword</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -110,7 +114,9 @@
 
   <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
+  <div id="printable" style="position: absolute; left: -9999px; width: 800px; background: white; padding: 1em;"></div>
 
+  <!-- Scripts -->
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
