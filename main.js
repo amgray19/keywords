@@ -208,15 +208,18 @@ function renderChart(type) {
           }
         },
         datalabels: {
-          color: "#000",
-          anchor: "end",
-          align: "top",
-          font: { weight: "bold" },
-          formatter: (value) => {
-            const percent = ((value / total) * 100).toFixed(1);
-            return `${value} (${percent}%)`;
-          }
-        }
+  color: () => {
+    return document.body.classList.contains("dark-mode") ? "#fff" : "#000";
+  },
+  anchor: "end",
+  align: "top",
+  font: { weight: "bold" },
+  formatter: (value, ctx) => {
+    const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+    const percent = ((value / total) * 100).toFixed(1);
+    return `${value} (${percent}%)`;
+  }
+}
       }
     },
     plugins: [ChartDataLabels]
