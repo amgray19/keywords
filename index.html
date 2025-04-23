@@ -130,9 +130,10 @@
       <h2>Instructions:</h2>
       <ul>
         <li>Edit the keyword list or add new ones (one per line).</li>
-        <li>Upload one or more Word <code>.docx</code> files.</li>
+        <li>Upload one or more Word <code>.docx</code> files. Older <code>.doc</code> Word files won't work.</li>
         <li>Click “Generate Summary” to process them.</li>
-        <li>Click “Print or Save Summary” to export the results.</li>
+        <li>Choose your options for charting, filtering, and sorting results.</li>
+        <li>Click “Print or Save Summary” to export the results (print to PDF).</li>
       </ul>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
@@ -145,20 +146,20 @@
 
         <div class="dropdown-row">
           <div class="dropdown-group">
-            <label for="chartType">Chart Type</label>
+            <label for="chartType">Chart Type:</label>
             <select id="chartType">
               <option value="bar">Bar Chart</option>
               <option value="pie">Pie Chart</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="filterKeyword">Filter by Keyword</label>
+            <label for="filterKeyword">Filter by Keyword:</label>
             <select id="filterKeyword">
               <option value="">(Show All)</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="viewMode">Group Results</label>
+            <label for="viewMode">Sort Results:</label>
             <select id="viewMode">
               <option value="file">By File</option>
               <option value="keyword">By Keyword</option>
