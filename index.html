@@ -4,27 +4,29 @@
   <meta charset="UTF-8" />
   <title>Federal Forbidden Keyword Search Tool</title>
   <style>
-    canvas {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  padding: 0.5em;
-}
     body {
       font-family: Arial, sans-serif;
       margin: 2em;
       background-color: #f9f9f9;
       color: #333;
     }
-    h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-    .section { margin-bottom: 2em; }
-    textarea, input[type="file"] {
+    .highlight {
+      font-weight: bold;
+      color: red;
+      background: yellow;
+    }
+    .flex-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75em;
+    }
+    textarea, input[type="file"], select {
       width: 100%;
       padding: 0.5em;
       font-size: 1em;
       margin-top: 0.5em;
     }
-    button, select {
+    button {
       padding: 0.6em 1em;
       font-size: 1em;
       border: none;
@@ -35,13 +37,13 @@
       margin-right: 0.5em;
       margin-top: 1em;
     }
-    select {
-      background-color: #ffffff;
-      color: #333;
-      border: 1px solid #ccc;
-    }
     button:hover { background-color: #005fa3; }
-    .highlight { font-weight: bold; color: red; background: yellow; }
+    canvas {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      padding: 0.5em;
+    }
     .summary, .results {
       margin-top: 2em;
       padding: 1em;
@@ -49,57 +51,70 @@
       border-radius: 5px;
       background: #fff;
     }
-    .file-section { margin-top: 3em; border-top: 2px solid #aaa; padding-top: 1.5em; }
-    .flex-row { display: flex; gap: 1em; align-items: flex-start; }
+    .file-section {
+      margin-top: 3em;
+      border-top: 2px solid #aaa;
+      padding-top: 1.5em;
+    }
+    .controls { margin-top: 1em; }
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.1.4</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.2</div>
 
-  <!-- FLEX: Logo + Right Column (Keywords + Chart) -->
-  <div class="flex-row" style="align-items: flex-start; gap: 2em;">
+  <div class="flex-row">
     <!-- LEFT: Logo + Instructions + Upload -->
     <div style="flex: 2;">
       <img src="logo.png" alt="Highlight Tool Logo" width="500" height="159">
-
       <h2>Instructions:</h2>
       <ul>
         <li>Edit the keyword list or add new ones (one per line).</li>
         <li>Upload one or more Word <code>.docx</code> files.</li>
         <li>Click “Generate Summary” to process them.</li>
+        <li>Use dropdowns to filter or group results.</li>
         <li>Click “Download PDF Summary” to save the results.</li>
-        <li>Use the dropdown to change the chart type.</li>
-        <li>Hit Reset to start over.</li>
       </ul>
-
-      <label for="upload"><strong>Upload Word (.docx) Files:</strong></label><br>
+      <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
-      <div style="margin-top: 1em;">
+      <div class="controls">
         <button id="generate">Generate Summary</button>
         <button id="download-pdf">Download PDF Summary</button>
         <button id="reset">Reset</button>
       </div>
     </div>
 
-    <!-- RIGHT: Keywords + Chart -->
-    <div style="flex: 1; min-width: 240px;">
+    <!-- RIGHT: Keywords + Chart + Filters -->
+    <div style="flex: 1; min-width: 260px;">
       <label for="keywords"><strong>Preloaded Keywords (edit or add more, one per line):</strong></label>
-      <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..." style="width: 100%;"></textarea>
+      <textarea id="keywords" rows="8" placeholder="Loading keywords.txt..."></textarea>
 
-      <label for="chartType" style="margin-top: 1em; display: block;"><strong>Chart Type:</strong></label>
-      <select id="chartType" style="margin-top: 0.5em;">
+      <label for="chartType"><strong>Chart Type:</strong></label>
+      <select id="chartType">
         <option value="bar">Bar Chart</option>
         <option value="pie">Pie Chart</option>
       </select>
 
-      <canvas id="chart" width="400" height="400" style="margin-top: 1em; border: 1px solid #ccc; border-radius: 6px; background: #fff; padding: 0.5em;"></canvas>
+      <label for="filterKeyword" style="margin-top: 1em;"><strong>Filter by Keyword:</strong></label>
+      <select id="filterKeyword">
+        <option value="">(Show All)</option>
+      </select>
+
+      <label for="viewMode" style="margin-top: 1em;"><strong>Group Results By:</strong></label>
+      <select id="viewMode">
+        <option value="file">File</option>
+        <option value="keyword">Keyword</option>
+      </select>
+
+      <canvas id="chart" width="400" height="400" style="margin-top: 1em;"></canvas>
     </div>
   </div>
 
-  <!-- RESULTS OUTPUT -->
+  <!-- RESULTS -->
   <div id="output" style="margin-top: 2em;"></div>
 
-  <!-- SCRIPTS -->
+  <!-- PDF EXPORT WRAPPER (hidden) -->
+  <div id="pdf-export" style="display:none;"></div>
+
   <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
