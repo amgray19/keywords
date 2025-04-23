@@ -12,15 +12,6 @@
       --border: #ccc;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --text: #eee;
-        --panel: #1e1e1e;
-        --border: #444;
-      }
-    }
-
     body.dark-mode {
       --bg: #121212;
       --text: #eee;
@@ -28,12 +19,19 @@
       --border: #444;
     }
 
+    body.light-mode {
+      --bg: #f9f9f9;
+      --text: #333;
+      --panel: #fff;
+      --border: #ccc;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 2em;
       background-color: var(--bg);
       color: var(--text);
-      transition: all 0.3s ease;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .highlight {
@@ -123,7 +121,7 @@
   </style>
 </head>
 <body>
-  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.4</div>
+  <div style="font-size: 0.9em; color: gray; text-align: right;">Version: v1.5</div>
 
   <div class="flex-row">
     <!-- LEFT: Logo + Instructions + Upload + Buttons + Dropdowns -->
@@ -143,24 +141,24 @@
         <button id="generate">Generate Summary</button>
         <button id="download-pdf">Print or Save Summary</button>
         <button id="reset">Reset</button>
-        <button id="toggle-theme">Light/Dark Mode</button>
+        <button id="toggle-theme">Toggle Dark/Light Mode</button>
 
         <div class="dropdown-row">
           <div class="dropdown-group">
-            <label for="chartType">Chart Type:</label>
+            <label for="chartType">Chart Type</label>
             <select id="chartType">
               <option value="bar">Bar Chart</option>
               <option value="pie">Pie Chart</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="filterKeyword">Filter by Keyword:</label>
+            <label for="filterKeyword">Filter by Keyword</label>
             <select id="filterKeyword">
               <option value="">(Show All)</option>
             </select>
           </div>
           <div class="dropdown-group">
-            <label for="viewMode">Grouping of Results:</label>
+            <label for="viewMode">Group Results</label>
             <select id="viewMode">
               <option value="file">By File</option>
               <option value="keyword">By Keyword</option>
@@ -192,25 +190,25 @@
         document.getElementById('keywords').value = text.trim();
       });
 
+    // Theme toggle override (dark/light)
     function applyTheme(mode) {
-  document.body.classList.toggle("dark-mode", mode === "dark");
-}
+      document.body.classList.remove("dark-mode", "light-mode");
+      document.body.classList.add(`${mode}-mode`);
+    }
 
-function toggleTheme() {
-  const current = localStorage.getItem("theme");
-  const newMode = current === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", newMode);
-  applyTheme(newMode);
-}
+    function toggleTheme() {
+      const current = localStorage.getItem("theme") || "light";
+      const newMode = current === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", newMode);
+      applyTheme(newMode);
+    }
 
-document.getElementById("toggle-theme").addEventListener("click", toggleTheme);
+    document.getElementById("toggle-theme").addEventListener("click", toggleTheme);
 
-window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("theme");
-  if (saved) {
-    applyTheme(saved);
-  }
-});
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("theme") || "light";
+      applyTheme(saved);
+    });
   </script>
 </body>
 </html>
