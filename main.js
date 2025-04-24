@@ -157,6 +157,7 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
       }]
     },
     options: {
+      radius: '85%',
       indexAxis,
       responsive: false,
       maintainAspectRatio: false,
