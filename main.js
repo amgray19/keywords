@@ -74,14 +74,40 @@ document.getElementById("generate").addEventListener("click", () => {
   });
 });
 
-document.getElementById("toggle-theme").addEventListener("click", () => {
-  const current = localStorage.getItem("theme") || "light";
-  const newMode = current === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", newMode);
-  document.body.classList.remove("dark-mode", "light-mode");
-  document.body.classList.add(`${newMode}-mode`);
-  document.getElementById("logo").src = newMode === "dark" ? "logo-dark.png" : "logo-light.png";
-  renderChart(document.getElementById("chartType").value);
+document.getElementById("download-pdf").addEventListener("click", () => {
+  renderChart(document.getElementById("chartType").value, true, () => {
+    const chartCanvas = document.getElementById("chart");
+    const chartImg = chartCanvas.toDataURL("image/png");
+
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    if (!printWindow) {
+      alert("Popup blocker prevented opening the print window.");
+      return;
+    }
+
+    const doc = printWindow.document;
+    doc.write("<html><head><title>Keyword Summary</title><style>");
+    doc.write(`
+      body { font-family: Arial, sans-serif; padding: 2em; color: #000; background: #fff; }
+      h1 { margin-top: 0; }
+      ul { padding-left: 1.2em; }
+      li { margin-bottom: 0.5em; }
+      .highlight { background: yellow; font-weight: bold; color: red; }
+      .section { margin-bottom: 2em; }
+      img { width: 80%; max-width: 600px; display: block; margin: 2em auto 1em auto; }
+    `);
+    doc.write("</style></head><body>");
+    doc.write("<h1>Keyword Summary Report</h1>");
+    doc.write(`<img src="${chartImg}" alt="Chart">`);
+    doc.write(document.getElementById("output").innerHTML);
+    doc.write("</body></html>");
+    doc.close();
+
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+  });
 });
 
 document.getElementById("chartType").addEventListener("change", (e) => {
@@ -102,7 +128,7 @@ function updateFilterOptions(keywordList) {
   });
 }
 
-function renderChart(type) {
+function renderChart(type, forceLightMode = false, onComplete = null) {
   if (!lastParsedData.length) return;
 
   const ctx = document.getElementById("chart").getContext("2d");
@@ -134,7 +160,7 @@ function renderChart(type) {
   };
 
   const backgroundColor = keywords.map((_, i) => pastelColor(i, keywords.length));
-  const borderColor = actualType === "pie" || actualType === "bar" ? (isDark ? "#fff" : "#000") : null;
+  const borderColor = (actualType === "pie" || actualType === "bar") ? (isDark ? "#fff" : "#000") : null;
 
   Chart.register(ChartDataLabels);
 
@@ -153,12 +179,17 @@ function renderChart(type) {
     options: {
       indexAxis,
       responsive: true,
+      animation: {
+        onComplete: () => {
+          if (typeof onComplete === "function") onComplete();
+        }
+      },
       layout: {
-  padding: {
-    top: 20,
-    bottom: actualType === "pie" ? 40 : 10
-  }
-},
+        padding: {
+          top: 20,
+          bottom: actualType === "pie" ? 40 : 10
+        }
+      },
       scales: actualType === "pie" ? {} : {
         x: {
           ticks: {
