@@ -158,14 +158,15 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
     },
     options: {
       indexAxis,
-      responsive: true,
+      responsive: false,
+      maintainAspectRatio: false,
       animation: {
         onComplete: () => { if (typeof onComplete === "function") onComplete(); }
       },
       layout: {
         padding: {
           top: actualType === "pie" ? 30 : 20,
-          bottom: actualType === "pie" ? 40 : 10
+          bottom: actualType === "pie" ? 100 : 10
         }
       },
       scales: actualType === "pie" ? {} : {
@@ -178,90 +179,41 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
           grid: { color: isDark ? "#444" : "#ccc" }
         }
       },
-plugins: {
-  legend: {
-    display: actualType === "pie",
-    position: "bottom",
-    labels: {
-      color: isDark ? "#fff" : "#000",
-      padding: 4,        // less vertical spacing between labels
-      boxHeight: 12,     // square height
-      boxWidth: 12,      // square width
-      usePointStyle: false // ensures squares, not circles or points
-    }
-  },
-  tooltip: {
-    callbacks: {
-      label: (ctx) => {
-        const count = ctx.raw;
-        const percent = ((count / total) * 100).toFixed(1);
-        return `${ctx.label}: ${count} match(es) (${percent}%)`;
+      plugins: {
+        legend: {
+          display: actualType === "pie",
+          position: "bottom",
+          labels: {
+            color: isDark ? "#fff" : "#000",
+            padding: 10,
+            boxHeight: 12,
+            boxWidth: 12,
+            usePointStyle: false
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const count = ctx.raw;
+              const percent = ((count / total) * 100).toFixed(1);
+              return `${ctx.label}: ${count} match(es) (${percent}%)`;
+            }
+          }
+        },
+        datalabels: {
+          color: isDark ? "#fff" : "#000",
+          anchor: actualType === "pie" ? "end" : "end",
+          align: actualType === "pie" ? "end" : "right",
+          offset: actualType === "pie" ? 8 : 0,
+          font: { weight: "bold" },
+          formatter: (value, ctx) => {
+            const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            const percent = (value / sum) * 100;
+            return percent < 5 ? '' : `${value} (${percent.toFixed(1)}%)`;
+          }
+        }
       }
-    }
-  },
-  datalabels: {
-    color: isDark ? "#fff" : "#000",
-    anchor: actualType === "pie" ? "end" : "end",
-    align: actualType === "pie" ? "end" : "right",
-    offset: actualType === "pie" ? 8 : 0,
-    font: { weight: "bold" },
-    formatter: (value, ctx) => {
-      const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-      const percent = (value / sum) * 100;
-      return percent < 5 ? '' : `${value} (${percent.toFixed(1)}%)`;
-    }
-  }
-}
     },
     plugins: [ChartDataLabels]
   });
-}
-
-function renderOutput() {
-  const output = document.getElementById("output");
-  output.innerHTML = "";
-  const filter = document.getElementById("filterKeyword").value;
-  const viewMode = document.getElementById("viewMode").value;
-
-  if (viewMode === "file") {
-    lastParsedData.forEach(file => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for: ${file.filename}</h2>`;
-      const summaryData = Object.entries(file.summary).filter(([k]) => !filter || k === filter);
-      const resultData = file.results.filter(entry => !filter || entry.keyword === filter);
-      section.innerHTML += renderSummary(summaryData);
-      section.innerHTML += renderResults(resultData);
-      output.appendChild(section);
-    });
-  } else if (viewMode === "keyword") {
-    const combined = {};
-    lastParsedData.forEach(file => {
-      file.results.forEach(entry => {
-        if (!filter || entry.keyword === filter) {
-          if (!combined[entry.keyword]) combined[entry.keyword] = [];
-          combined[entry.keyword].push(entry);
-        }
-      });
-    });
-    Object.keys(combined).sort().forEach(keyword => {
-      const section = document.createElement("div");
-      section.classList.add("file-section");
-      section.innerHTML = `<h2>Results for Keyword: ${keyword}</h2>`;
-      section.innerHTML += renderResults(combined[keyword]);
-      output.appendChild(section);
-    });
-  }
-}
-
-function renderSummary(summaryData) {
-  if (!summaryData.length) return "<div class='summary'><h3>Summary</h3><p>No results found.</p></div>";
-  return "<div class='summary'><h3>Summary</h3><ul>" + summaryData.map(([k, p]) =>
-    `<li><strong>${k}</strong> — ${p.length} match(es) (Sentences ${[...new Set(p)].join(", ")})</li>`).join("") + "</ul></div>";
-}
-
-function renderResults(resultData) {
-  if (!resultData.length) return "";
-  return "<div class='results'><h3>Matched Sentences</h3><ul>" + resultData.map(entry =>
-    `<li><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`).join("") + "</ul></div>";
 }
