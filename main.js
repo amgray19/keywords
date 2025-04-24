@@ -177,37 +177,40 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
           grid: { color: isDark ? "#444" : "#ccc" }
         }
       },
-      plugins: {
-        legend: {
-          display: actualType === "pie",
-          position: "bottom",
-          labels: {
-            color: isDark ? "#fff" : "#000",
-            padding: 20
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const count = ctx.raw;
-              const percent = ((count / total) * 100).toFixed(1);
-              return `${ctx.label}: ${count} match(es) (${percent}%)`;
-            }
-          }
-        },
-        datalabels: {
-          color: isDark ? "#fff" : "#000",
-          anchor: actualType === "pie" ? "end" : "end",
-          align: actualType === "pie" ? "end" : "right",
-          offset: actualType === "pie" ? 8 : 0,
-          font: { weight: "bold" },
-          formatter: (value, ctx) => {
-            const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            const percent = (value / sum) * 100;
-            return percent < 5 ? '' : `${value} (${percent.toFixed(1)}%)`;
-          }
-        }
+plugins: {
+  legend: {
+    display: actualType === "pie",
+    position: "bottom",
+    labels: {
+      color: isDark ? "#fff" : "#000",
+      padding: 4,        // less vertical spacing between labels
+      boxHeight: 12,     // square height
+      boxWidth: 12,      // square width
+      usePointStyle: false // ensures squares, not circles or points
+    }
+  },
+  tooltip: {
+    callbacks: {
+      label: (ctx) => {
+        const count = ctx.raw;
+        const percent = ((count / total) * 100).toFixed(1);
+        return `${ctx.label}: ${count} match(es) (${percent}%)`;
       }
+    }
+  },
+  datalabels: {
+    color: isDark ? "#fff" : "#000",
+    anchor: actualType === "pie" ? "end" : "end",
+    align: actualType === "pie" ? "end" : "right",
+    offset: actualType === "pie" ? 8 : 0,
+    font: { weight: "bold" },
+    formatter: (value, ctx) => {
+      const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+      const percent = (value / sum) * 100;
+      return percent < 5 ? '' : `${value} (${percent.toFixed(1)}%)`;
+    }
+  }
+}
     },
     plugins: [ChartDataLabels]
   });
