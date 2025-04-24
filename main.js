@@ -217,3 +217,68 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
     plugins: [ChartDataLabels]
   });
 }
+
+// ... everything above remains unchanged (your chart logic, event listeners, etc.)
+
+function renderOutput() {
+  const output = document.getElementById("output");
+  output.innerHTML = "";
+  const filter = document.getElementById("filterKeyword").value;
+  const viewMode = document.getElementById("viewMode").value;
+
+  if (viewMode === "file") {
+    lastParsedData.forEach(file => {
+      const section = document.createElement("div");
+      section.classList.add("file-section");
+      section.innerHTML = `<h2>Results for: ${file.filename}</h2>`;
+
+      const summaryData = Object.entries(file.summary).filter(([k]) => !filter || k === filter);
+      const resultData = file.results.filter(entry => !filter || entry.keyword === filter);
+
+      section.innerHTML += renderSummary(summaryData);
+      section.innerHTML += renderResults(resultData);
+      output.appendChild(section);
+    });
+  } else if (viewMode === "keyword") {
+    const combined = {};
+    lastParsedData.forEach(file => {
+      file.results.forEach(entry => {
+        if (!filter || entry.keyword === filter) {
+          if (!combined[entry.keyword]) combined[entry.keyword] = [];
+          combined[entry.keyword].push(entry);
+        }
+      });
+    });
+
+    Object.keys(combined).sort().forEach(keyword => {
+      const section = document.createElement("div");
+      section.classList.add("file-section");
+      section.innerHTML = `<h2>Results for Keyword: ${keyword}</h2>`;
+      section.innerHTML += renderResults(combined[keyword]);
+      output.appendChild(section);
+    });
+  }
+}
+
+function renderSummary(summaryData) {
+  if (!summaryData.length) {
+    return "<div class='summary'><h3>Summary</h3><p>No results found.</p></div>";
+  }
+
+  let html = "<div class='summary'><h3>Summary</h3><ul>";
+  summaryData.forEach(([keyword, pages]) => {
+    html += `<li><strong>${keyword}</strong> — ${pages.length} match(es) (Sentences ${[...new Set(pages)].join(", ")})</li>`;
+  });
+  html += "</ul></div>";
+  return html;
+}
+
+function renderResults(resultData) {
+  if (!resultData.length) return "";
+  let html = "<div class='results'><h3>Matched Sentences</h3><ul>";
+  resultData.forEach(entry => {
+    html += `<li><strong>Sentence ${entry.page}:</strong> “${entry.html}”</li>`;
+  });
+  html += "</ul></div>";
+  return html;
+}
