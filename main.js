@@ -121,7 +121,7 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
   const chartCanvas = document.getElementById("chart");
   chartCanvas.style.display = "block";
   chartCanvas.style.border = "1px solid #ccc";
-  chartCanvas.height = 540;
+  chartCanvas.height = 500;
 
   if (chartInstance) chartInstance.destroy();
 
