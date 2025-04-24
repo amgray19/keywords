@@ -1,4 +1,3 @@
-
 let chartInstance = null;
 let lastParsedData = [];
 
