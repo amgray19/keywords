@@ -1,11 +1,23 @@
 let chartInstance = null;
 let lastParsedData = [];
 
+// Fix: Apply saved theme correctly on load
 document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("theme") || "light";
-  document.body.classList.add(`${saved}-mode`);
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.body.classList.remove("dark-mode", "light-mode");
+  document.body.classList.add(`${savedTheme}-mode`);
   const logo = document.getElementById("logo");
-  if (logo) logo.src = saved === "dark" ? "logo-dark.png" : "logo-light.png";
+  if (logo) logo.src = savedTheme === "dark" ? "logo-dark.png" : "logo-light.png";
+});
+
+document.getElementById("toggle-theme").addEventListener("click", () => {
+  const current = localStorage.getItem("theme") || "light";
+  const newMode = current === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", newMode);
+  document.body.classList.remove("dark-mode", "light-mode");
+  document.body.classList.add(`${newMode}-mode`);
+  document.getElementById("logo").src = newMode === "dark" ? "logo-dark.png" : "logo-light.png";
+  renderChart(document.getElementById("chartType").value);
 });
 
 document.getElementById("reset").addEventListener("click", () => {
