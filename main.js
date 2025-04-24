@@ -22,6 +22,7 @@ document.getElementById("reset").addEventListener("click", () => {
   document.getElementById("upload").value = "";
   document.getElementById("output").innerHTML = "";
   document.getElementById("chart").style.display = "none";
+  document.getElementById("scrollPrompt").style.display = "none";
   if (chartInstance) chartInstance.destroy();
   chartInstance = null;
   lastParsedData = [];
