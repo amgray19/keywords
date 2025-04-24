@@ -32,6 +32,8 @@ document.getElementById("reset").addEventListener("click", () => {
 document.getElementById("generate").addEventListener("click", () => {
   const output = document.getElementById("output");
   output.innerHTML = "";
+  document.getElementById("scrollPrompt").style.display = "block";
+  document.getElementById("scrollPrompt").textContent = "▼▼▼ Scroll Down for Summary Results ▼▼▼";
   lastParsedData = [];
 
   const keywordList = document.getElementById("keywords").value.split(/\r?\n/).map(k => k.trim()).filter(k => k);
