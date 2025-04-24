@@ -154,8 +154,11 @@ function renderChart(type) {
       indexAxis,
       responsive: true,
       layout: {
-        padding: { top: 20 }
-      },
+  padding: {
+    top: 20,
+    bottom: actualType === "pie" ? 40 : 10
+  }
+},
       scales: actualType === "pie" ? {} : {
         x: {
           ticks: {
