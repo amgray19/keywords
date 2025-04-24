@@ -167,7 +167,7 @@ function renderChart(type, forceLightMode = false, onComplete = null) {
       layout: {
         padding: {
           top: actualType === "pie" ? 30 : 20,
-          bottom: actualType === "pie" ? 100 : 10
+          bottom: actualType === "pie" ? 140 : 10
         }
       },
       scales: actualType === "pie" ? {} : {
