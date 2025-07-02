@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' https://cdn.jsdelivr.net https://unpkg.com;
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        connect-src 'self';
+        font-src 'self';
+      ">
   <title>Federal Forbidden Keyword Search Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
@@ -195,5 +204,12 @@
       document.getElementById("logo").src = saved === "dark" ? "logo-dark.png" : "logo-light.png";
     });
   </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+      .catch(err => console.error('Service Worker registration failed:', err));
+  }
+</script>
 </body>
 </html>
