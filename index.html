@@ -80,12 +80,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
   <script>
-    fetch('keywords.txt')
-      .then(response => response.text())
-      .then(text => {
-        document.getElementById('keywords').value = text.trim();
-      });
-
     window.addEventListener("DOMContentLoaded", () => {
       const saved = localStorage.getItem("theme") || "light";
       document.body.classList.add(`${saved}-mode`);
