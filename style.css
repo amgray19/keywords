@@ -1,24 +1,29 @@
-  <style>
-    :root {
-      --bg: #f9f9f9;
-      --text: #333;
-      --panel: #fff;
-      --border: #ccc;
-    }
+  <style>:root {
+  --bg: #f9f9f9;
+  --text: #333;
+  --panel: #fff;
+  --border: #ccc;
+  --code-bg: #eee;
+  --code-text: #000;
+}
 
-    body.dark-mode {
-      --bg: #121212;
-      --text: #eee;
-      --panel: #1e1e1e;
-      --border: #444;
-    }
+body.dark-mode {
+  --bg: #121212;
+  --text: #eee;
+  --panel: #1e1e1e;
+  --border: #444;
+  --code-bg: #1e1e1e;
+  --code-text: #eee;
+}
 
-    body.light-mode {
-      --bg: #f9f9f9;
-      --text: #333;
-      --panel: #fff;
-      --border: #ccc;
-    }
+body.light-mode {
+  --bg: #f9f9f9;
+  --text: #333;
+  --panel: #fff;
+  --border: #ccc;
+  --code-bg: #eee;
+  --code-text: #000;
+}
 
     body {
       font-family: Arial, sans-serif;
@@ -113,4 +118,13 @@
         flex-direction: column;
       }
     }
+
+pre.readme-block {
+  white-space: pre-wrap;
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 1em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
   </style>
