@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src 'self' https://cdn.jsdelivr.net/npm https://unpkg.com;
-        style-src 'self';
-        img-src 'self' data:;
-        connect-src 'self';
-        font-src 'self';
-        object-src 'none';
-        base-uri 'self';
-        form-action 'self';
-      ">
+        content="
+          default-src 'self';
+          script-src 'self' https://cdn.jsdelivr.net https://unpkg.com;
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data:;
+          connect-src 'self';
+          font-src 'self' https://fonts.googleapis.com;
+          object-src 'none';
+          base-uri 'self';
+          form-action 'self';
+        ">
   <title>Federal Forbidden Keyword Search Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css">
@@ -32,8 +32,8 @@
         <li>Click “Print or Save Summary” to export the results.</li>
       </ul>
       <details>
-  <summary>View full README / Instructions</summary>
-  <pre style="white-space: pre-wrap; background: #f0f0f0; padding: 1em; border: 1px solid #ccc; border-radius: 6px;">
+        <summary>View full README / Instructions</summary>
+        <pre style="white-space: pre-wrap; background: #f0f0f0; padding: 1em; border: 1px solid #ccc; border-radius: 6px;">
 Federal Forbidden Keyword Search Tool
 
 This web application scans .docx files for specified keywords and generates a summary report, including visual charts of keyword frequencies.
@@ -88,20 +88,23 @@ This ensures users get the latest version.
 CSP REFERENCE
 Example CSP meta tag in index.html:
 
-<meta http-equiv="Content-Security-Policy"
+&lt;meta http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        script-src 'self' https://cdn.jsdelivr.net/npm https://unpkg.com;
-        style-src 'self';
+        script-src 'self' https://cdn.jsdelivr.net https://unpkg.com;
+        style-src 'self' 'unsafe-inline';
         img-src 'self' data:;
         connect-src 'self';
-        font-src 'self';
+        font-src 'self' https://fonts.googleapis.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
-      ">
-  </pre>
-</details>
+      "&gt;
+
+LICENSE
+MIT
+        </pre>
+      </details>
       <br><br>
       <label for="upload"><strong>Upload Word (.docx) Files:</strong></label>
       <input type="file" id="upload" accept=".docx" multiple />
@@ -151,19 +154,5 @@ Example CSP meta tag in index.html:
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const saved = localStorage.getItem("theme") || "light";
-      document.body.classList.add(`${saved}-mode`);
-      document.getElementById("logo").src = saved === "dark" ? "logo-dark.png" : "logo-light.png";
-    });
-  </script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ Service Worker registered:', reg.scope))
-      .catch(err => console.error('Service Worker registration failed:', err));
-  }
-</script>
 </body>
 </html>
